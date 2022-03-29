@@ -77,7 +77,7 @@ PubSubClient mqtt(client);
 
 int ledStatus = LOW;
 
-uint32_t lastReconnectAttempt = 0;
+int lastReconnectAttempt = 0;
 
 void mqttCallback(char *topic, byte *payload, unsigned int len)
 {
@@ -110,13 +110,14 @@ boolean status = mqtt.connect("GsmClientName", "jezerca", "Password@2");
         return false;
     }
     SerialMon.println(" success");
+    lastReconnectAttempt = 0;
     mqtt.publish(topicLed, "GsmClientTest started");
     mqtt.subscribe(topicLed);
     return mqtt.connected();
 }
 
 #define uS_TO_S_FACTOR 1000000ULL  /* Conversion factor for micro seconds to seconds */
-#define TIME_TO_SLEEP  1200        /* Time ESP32 will go to sleep (in seconds) */
+#define TIME_TO_SLEEP  30        /* Time ESP32 will go to sleep (in seconds) */
 
 RTC_DATA_ATTR int bootCount = 0;
 
@@ -180,6 +181,8 @@ void setup()
     // MQTT Broker setup
     mqtt.setServer(broker, 1883);
     mqtt.setCallback(mqttCallback);
+    mqttConnect();
+   
 
   Serial.println("SHT31 test");
   if (! sht31.begin(0x44)) {   // Set to 0x45 for alternate i2c addr
@@ -197,6 +200,19 @@ void setup()
 
 void loop()
 {
+  while (!mqtt.connected()) {
+        SerialMon.println("Reconnecting to MQTT");
+        // Reconnect every 10 seconds
+        uint32_t t = millis();
+        if (t - lastReconnectAttempt > 20000L) {
+            lastReconnectAttempt = t;
+            if (mqttConnect()) {
+                lastReconnectAttempt = 0;
+            }
+        }
+        delay(100);
+    }
+  //SHT30
   float t = sht31.readTemperature();
   float h = sht31.readHumidity();
 
@@ -228,26 +244,12 @@ void loop()
     loopCnt = 0;
   }
   loopCnt++;
-
-  while (!mqtt.connected()) {
-        SerialMon.println("=== MQTT NOT CONNECTED ===");
-        // Reconnect every 10 seconds
-        uint32_t t = millis();
-        if (t - lastReconnectAttempt > 10000L) {
-            lastReconnectAttempt = t;
-            if (mqttConnect()) {
-                lastReconnectAttempt = 0;
-            }
-        }
-        delay(100);
-        return;
-    }
     
   mqtt.publish("lilygo/sht30_h", String(h).c_str());
   delay(100);
   mqtt.publish("lilygo/sht30_t", String(t).c_str());
 
-    //DS18b20 sensor
+  //DS18b20 sensor
   sensors.requestTemperatures(); 
   float temperatureC = sensors.getTempCByIndex(0);
   delay(1000);
@@ -256,7 +258,7 @@ void loop()
   Serial.print("ºC");
   Serial.println("\n");
   mqtt.publish("lilygo/ds18b20", String(temperatureC).c_str());
-  delay(1000);
+  delay(100);
 
   //AXP192
   mqtt.publish("lilygo/vbus_v", String(vbus_v).c_str());
@@ -279,8 +281,8 @@ void loop()
   Serial.print("mV");
   Serial.println("\n");
   mqtt.publish("lilygo/uv", String(sensorValue).c_str());
-  delay(5000);
-
+  delay(20000);
+/*
   //deep sleep command
   esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
   Serial.println("Setup ESP32 to sleep for every " + String(TIME_TO_SLEEP) + " Seconds");
@@ -288,5 +290,6 @@ void loop()
   Serial.println("Going to sleep now");
   Serial.flush(); 
   esp_deep_sleep_start();
-  //mqtt.loop();
+  */
+  mqtt.loop();
 }
