@@ -1,4 +1,5 @@
 
+#include <axp20x.h>
 #define SIM800L_AXP192_VERSION_20200327
 #include "utilities.h"
 #include <Arduino.h>
@@ -200,6 +201,31 @@ void setup()
 
 void loop()
 {
+
+    vbus_v = axp.getVbusVoltage();
+    vbus_c = axp.getVbusCurrent();
+    batt_v = axp.getBattVoltage();
+    // axp.getBattPercentage();   // axp192 is not support percentage
+    Serial.printf("VBUS:%.2f mV %.2f mA ,BATTERY: %.2f\n", vbus_v, vbus_c, batt_v);
+
+        if (axp.isChargeing()) {
+            batt_charging_c = axp.getBattChargeCurrent()-290;
+            charging = true;
+            Serial.print("Charge:");
+            Serial.print(batt_charging_c);
+            Serial.println(" mA");
+            batt_discharg_c = 0;
+        } else {
+            // Show current consumption
+            batt_discharg_c = axp.getBattDischargeCurrent();
+            charging = false;
+            Serial.print("Discharge:");
+            Serial.print(batt_discharg_c);
+            Serial.println(" mA");
+            batt_charging_c = 0;
+        }
+
+  
   while (!mqtt.connected()) {
         SerialMon.println("Reconnecting to MQTT");
         // Reconnect every 10 seconds
@@ -281,7 +307,7 @@ void loop()
   Serial.print("mV");
   Serial.println("\n");
   mqtt.publish("lilygo/uv", String(sensorValue).c_str());
-  delay(20000);
+  delay(10000);
 /*
   //deep sleep command
   esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
@@ -290,6 +316,6 @@ void loop()
   Serial.println("Going to sleep now");
   Serial.flush(); 
   esp_deep_sleep_start();
-  */
+ */
   mqtt.loop();
 }
