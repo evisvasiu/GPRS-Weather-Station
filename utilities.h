@@ -3,6 +3,14 @@
 
 #include <Wire.h>
 
+extern float vbus_v;
+extern float vbus_c;
+extern float batt_v;
+extern float batt_charging_c;
+extern float batt_discharg_c;
+extern bool charging;
+
+
 #if defined(SIM800L_IP5306_VERSION_20190610)
 
 #define MODEM_RST             5
@@ -148,20 +156,24 @@ bool setupPMU()
     //! Use axp192 adc get voltage info
     axp.adc1Enable(AXP202_VBUS_VOL_ADC1 | AXP202_VBUS_CUR_ADC1 | AXP202_BATT_CUR_ADC1 | AXP202_BATT_VOL_ADC1, true);
 
-    float vbus_v = axp.getVbusVoltage();
-    float vbus_c = axp.getVbusCurrent();
-    float batt_v = axp.getBattVoltage();
+    vbus_v = axp.getVbusVoltage();
+    vbus_c = axp.getVbusCurrent();
+    batt_v = axp.getBattVoltage();
     // axp.getBattPercentage();   // axp192 is not support percentage
     Serial.printf("VBUS:%.2f mV %.2f mA ,BATTERY: %.2f\n", vbus_v, vbus_c, batt_v);
 
         if (axp.isChargeing()) {
+            batt_charging_c = axp.getBattChargeCurrent();
+            charging = true;
             Serial.print("Charge:");
-            Serial.print(axp.getBattChargeCurrent());
+            Serial.print(batt_charging_c);
             Serial.println(" mA");
         } else {
             // Show current consumption
+            batt_discharg_c = axp.getBattDischargeCurrent();
+            charging = false;
             Serial.print("Discharge:");
-            Serial.print(axp.getBattDischargeCurrent());
+            Serial.print(batt_discharg_c);
             Serial.println(" mA");
         }
 

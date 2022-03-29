@@ -7,6 +7,14 @@
 #include <OneWire.h>              //DS18B20
 #include <DallasTemperature.h>    //DS18B20
 
+//AXP192
+float vbus_v;
+float vbus_c;
+float batt_v;
+float batt_charging_c;
+float batt_discharg_c;
+bool charging;
+
 const int analogInPin = A0;  // ESP8266 Analog Pin ADC0 = A0
 int sensorValue = 0;         // value read from the pot
 
@@ -250,6 +258,21 @@ void loop()
   mqtt.publish("lilygo/ds18b20", String(temperatureC).c_str());
   delay(1000);
 
+  //AXP192
+  mqtt.publish("lilygo/vbus_v", String(vbus_v).c_str());
+  delay(100);
+  mqtt.publish("lilygo/vbus_c", String(vbus_c).c_str());
+  delay(100);
+  mqtt.publish("lilygo/batt_v", String(batt_v).c_str());
+  delay(100);
+  mqtt.publish("lilygo/batt_charging_c", String(batt_charging_c).c_str());
+  delay(100);  
+  mqtt.publish("lilygo/batt_discharg_c", String(batt_discharg_c).c_str());
+  delay(100);
+  mqtt.publish("lilygo/charging", String(charging).c_str());
+  delay(100);
+
+  //UV sensor
   sensorValue = analogRead(analogInPin);
   Serial.print("UV sensor: ");
   Serial.print(sensorValue);
