@@ -243,9 +243,9 @@ void loop()
         return;
     }
     
-  mqtt.publish("lilygo/sht30", String(h).c_str());
+  mqtt.publish("lilygo/sht30_h", String(h).c_str());
   delay(100);
-  mqtt.publish("lilygo/sht30", String(t).c_str());
+  mqtt.publish("lilygo/sht30_t", String(t).c_str());
 
     //DS18b20 sensor
   sensors.requestTemperatures(); 
