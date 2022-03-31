@@ -16,6 +16,9 @@ float batt_charging_c;
 float batt_discharg_c;
 bool charging;
 
+//deep sleep
+String deep_sleep = "false";
+
 const int analogInPin = A0;  // ESP8266 Analog Pin ADC0 = A0
 int sensorValue = 0;         // value read from the pot
 
@@ -80,19 +83,20 @@ int ledStatus = LOW;
 
 int lastReconnectAttempt = 0;
 
-void mqttCallback(char *topic, byte *payload, unsigned int len)
-{
-    SerialMon.print("Message arrived [");
-    SerialMon.print(topic);
-    SerialMon.print("]: ");
-    SerialMon.write(payload, len);
-    SerialMon.println();
-
+void mqttCallback(char *topic, byte *payload, unsigned int length) {
+    SerialMon.print("Message arrived in topic: ");
+    SerialMon.println(topic);
+    SerialMon.print("Message:");
+    String message;
+    for (int i = 0; i < length; i++) {
+        message = message + (char) payload[i];  // convert *byte to string
+      }
+    SerialMon.print(message);
+    
     // Only proceed if incoming message's topic matches
-    if (String(topic) == topicLed) {
-        ledStatus = !ledStatus;
-        digitalWrite(LED_GPIO, ledStatus);
-        mqtt.publish(topicLedStatus, ledStatus ? "1" : "0");
+    if (String(topic) == "lilygo/deep_sleep") {
+        deep_sleep = message;
+        mqtt.publish("lilygo/deep_sleep_status", String(deep_sleep).c_str());
     }
 }
 
@@ -112,8 +116,7 @@ boolean status = mqtt.connect("GsmClientName", "jezerca", "Password@2");
     }
     SerialMon.println(" success");
     lastReconnectAttempt = 0;
-    mqtt.publish(topicLed, "GsmClientTest started");
-    mqtt.subscribe(topicLed);
+    mqtt.publish(topicInit, "Started");
     return mqtt.connected();
 }
 
@@ -127,7 +130,7 @@ void setup()
 {
     // Set console baud rate
     SerialMon.begin(115200);
-
+    mqtt.subscribe("lilygo/deep_sleep");
     delay(10);
     sensors.begin();        //DS18B20
 
@@ -196,12 +199,11 @@ void setup()
     Serial.println("ENABLED");
   else
     Serial.println("DISABLED");
-
 }
 
 void loop()
-{
-
+{    
+    mqtt.subscribe("lilygo/deep_sleep");
     vbus_v = axp.getVbusVoltage();
     vbus_c = axp.getVbusCurrent();
     batt_v = axp.getBattVoltage();
@@ -209,7 +211,7 @@ void loop()
     Serial.printf("VBUS:%.2f mV %.2f mA ,BATTERY: %.2f\n", vbus_v, vbus_c, batt_v);
 
         if (axp.isChargeing()) {
-            batt_charging_c = axp.getBattChargeCurrent()-290;
+            batt_charging_c = axp.getBattChargeCurrent();
             charging = true;
             Serial.print("Charge:");
             Serial.print(batt_charging_c);
@@ -307,8 +309,12 @@ void loop()
   Serial.print("mV");
   Serial.println("\n");
   mqtt.publish("lilygo/uv", String(sensorValue).c_str());
+  mqtt.loop();
   delay(10000);
-/*
+
+  if (deep_sleep == "true")
+  {
+
   //deep sleep command
   esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
   Serial.println("Setup ESP32 to sleep for every " + String(TIME_TO_SLEEP) + " Seconds");
@@ -316,6 +322,7 @@ void loop()
   Serial.println("Going to sleep now");
   Serial.flush(); 
   esp_deep_sleep_start();
- */
-  mqtt.loop();
+
+  }
+  
 }
