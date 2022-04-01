@@ -17,7 +17,8 @@ float batt_discharg_c;
 bool charging;
 
 //deep sleep
-String deep_sleep = "false";
+String deep_sleep = "true";
+bool sleep_command;
 
 const int analogInPin = A0;  // ESP8266 Analog Pin ADC0 = A0
 int sensorValue = 0;         // value read from the pot
@@ -95,6 +96,7 @@ void mqttCallback(char *topic, byte *payload, unsigned int length) {
     
     // Only proceed if incoming message's topic matches
     if (String(topic) == "lilygo/deep_sleep") {
+        sleep_command = true;
         deep_sleep = message;
         mqtt.publish("lilygo/deep_sleep_status", String(deep_sleep).c_str());
     }
@@ -117,6 +119,7 @@ boolean status = mqtt.connect("GsmClientName", "jezerca", "Password@2");
     SerialMon.println(" success");
     lastReconnectAttempt = 0;
     mqtt.publish(topicInit, "Started");
+    mqtt.subscribe("lilygo/deep_sleep");
     return mqtt.connected();
 }
 
@@ -130,7 +133,6 @@ void setup()
 {
     // Set console baud rate
     SerialMon.begin(115200);
-    mqtt.subscribe("lilygo/deep_sleep");
     delay(10);
     sensors.begin();        //DS18B20
 
@@ -203,7 +205,6 @@ void setup()
 
 void loop()
 {    
-    mqtt.subscribe("lilygo/deep_sleep");
     vbus_v = axp.getVbusVoltage();
     vbus_c = axp.getVbusCurrent();
     batt_v = axp.getBattVoltage();
@@ -310,9 +311,9 @@ void loop()
   Serial.println("\n");
   mqtt.publish("lilygo/uv", String(sensorValue).c_str());
   mqtt.loop();
-  delay(10000);
+  delay(2000);
 
-  if (deep_sleep == "true")
+  if (deep_sleep == "true" && sleep_command == true)
   {
 
   //deep sleep command
