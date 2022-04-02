@@ -8,6 +8,11 @@
 #include <OneWire.h>              //DS18B20
 #include <DallasTemperature.h>    //DS18B20
 
+#include "DHT.h"
+#define DHTPIN 14  
+#define DHTTYPE DHT22
+DHT dht(DHTPIN, DHTTYPE);
+
 //AXP192
 float vbus_v;
 float vbus_c;
@@ -19,6 +24,8 @@ bool charging;
 //deep sleep
 String deep_sleep = "true";
 bool sleep_command;
+String sleep_time_sec = "20";
+
 
 const int analogInPin = A0;  // ESP8266 Analog Pin ADC0 = A0
 int sensorValue = 0;         // value read from the pot
@@ -92,13 +99,18 @@ void mqttCallback(char *topic, byte *payload, unsigned int length) {
     for (int i = 0; i < length; i++) {
         message = message + (char) payload[i];  // convert *byte to string
       }
-    SerialMon.print(message);
+    SerialMon.println(message);
     
     // Only proceed if incoming message's topic matches
     if (String(topic) == "lilygo/deep_sleep") {
         sleep_command = true;
         deep_sleep = message;
         mqtt.publish("lilygo/deep_sleep_status", String(deep_sleep).c_str());
+    }
+
+     if (String(topic) == "lilygo/deep_sleep_duration") {
+     sleep_time_sec = message;
+     mqtt.publish("lilygo/sleep_time_feedback", String(sleep_time_sec).c_str());
     }
 }
 
@@ -119,12 +131,14 @@ boolean status = mqtt.connect("GsmClientName", "jezerca", "Password@2");
     SerialMon.println(" success");
     lastReconnectAttempt = 0;
     mqtt.publish(topicInit, "Started");
-    mqtt.subscribe("lilygo/deep_sleep");
+    mqtt.publish("lilygo/sleep_time_feedback", String(sleep_time_sec).c_str());
+    mqtt.subscribe("lilygo/deep_sleep",1);
+    mqtt.subscribe("lilygo/deep_sleep_duration",1);
     return mqtt.connected();
 }
 
 #define uS_TO_S_FACTOR 1000000ULL  /* Conversion factor for micro seconds to seconds */
-#define TIME_TO_SLEEP  30        /* Time ESP32 will go to sleep (in seconds) */
+//#define TIME_TO_SLEEP  30        /* Time ESP32 will go to sleep (in seconds) */
 
 RTC_DATA_ATTR int bootCount = 0;
 
@@ -134,7 +148,9 @@ void setup()
     // Set console baud rate
     SerialMon.begin(115200);
     delay(10);
+    
     sensors.begin();        //DS18B20
+    dht.begin();            //DHT22
 
     setupModem();
 
@@ -201,10 +217,14 @@ void setup()
     Serial.println("ENABLED");
   else
     Serial.println("DISABLED");
+
 }
 
 void loop()
 {    
+    float dht_h = dht.readHumidity();
+    float dht_t = dht.readTemperature();
+  
     vbus_v = axp.getVbusVoltage();
     vbus_c = axp.getVbusCurrent();
     batt_v = axp.getBattVoltage();
@@ -274,9 +294,9 @@ void loop()
   }
   loopCnt++;
     
-  mqtt.publish("lilygo/sht30_h", String(h).c_str());
+  mqtt.publish("lilygo/sht30_h", String(dht_h).c_str());
   delay(100);
-  mqtt.publish("lilygo/sht30_t", String(t).c_str());
+  mqtt.publish("lilygo/sht30_t", String(dht_t).c_str());
 
   //DS18b20 sensor
   sensors.requestTemperatures(); 
@@ -317,8 +337,8 @@ void loop()
   {
 
   //deep sleep command
-  esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
-  Serial.println("Setup ESP32 to sleep for every " + String(TIME_TO_SLEEP) + " Seconds");
+  esp_sleep_enable_timer_wakeup(sleep_time_sec.toInt() * uS_TO_S_FACTOR);
+  Serial.println("Setup ESP32 to sleep for every " + String(sleep_time_sec) + " Seconds");
 
   Serial.println("Going to sleep now");
   Serial.flush(); 
