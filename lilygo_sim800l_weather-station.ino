@@ -24,7 +24,7 @@ bool charging;
 //deep sleep
 String deep_sleep = "true";
 bool sleep_command;
-String sleep_time_sec = "20";
+String sleep_time_sec = "1200";
 
 
 const int analogInPin = A0;  // ESP8266 Analog Pin ADC0 = A0
@@ -131,7 +131,6 @@ boolean status = mqtt.connect("GsmClientName", "jezerca", "Password@2");
     SerialMon.println(" success");
     lastReconnectAttempt = 0;
     mqtt.publish(topicInit, "Started");
-    mqtt.publish("lilygo/sleep_time_feedback", String(sleep_time_sec).c_str());
     mqtt.subscribe("lilygo/deep_sleep",1);
     mqtt.subscribe("lilygo/deep_sleep_duration",1);
     return mqtt.connected();
@@ -330,6 +329,7 @@ void loop()
   Serial.print("mV");
   Serial.println("\n");
   mqtt.publish("lilygo/uv", String(sensorValue).c_str());
+  delay(2000);
   mqtt.loop();
   delay(2000);
 
