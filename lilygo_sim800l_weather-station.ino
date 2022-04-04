@@ -221,24 +221,37 @@ void setup()
 
 void loop()
 {    
-
-  for (int i=0; i<=5; i++)
+  for (int i=1; i<=5; i++)
   {
-
+    //checking connection to MQTT
+    while (!mqtt.connected()) {
+        SerialMon.println("Reconnecting to MQTT");
+        // Reconnect every 10 seconds
+        uint32_t t = millis();
+        if (t - lastReconnectAttempt > 20000L) {
+            lastReconnectAttempt = t;
+            if (mqttConnect()) {
+                lastReconnectAttempt = 0;
+            }
+        }
+        delay(100);
+    }
+    
+    //////////////////////////////////////////
+    //***** getting sensor values first...***
+    /////////////////////////////////////////
+    
     //Dht22
     float dht_h = dht.readHumidity();
-    delay(100);
     float dht_t = dht.readTemperature();
     delay(100);
+
+    //power module
     vbus_v = axp.getVbusVoltage();
-    delay(50);
     vbus_c = axp.getVbusCurrent();
-    delay(50);
     batt_v = axp.getBattVoltage();
-    delay(50);
     // axp.getBattPercentage();   // axp192 is not support percentage
     Serial.printf("VBUS:%.2f mV %.2f mA ,BATTERY: %.2f\n", vbus_v, vbus_c, batt_v);
-
         if (axp.isChargeing()) {
             batt_charging_c = axp.getBattChargeCurrent();
             charging = true;
@@ -255,56 +268,38 @@ void loop()
             Serial.println(" mA");
             batt_charging_c = 0;
         }
+    delay(100); 
+    
+    //SHT30
+    float t = sht31.readTemperature();
+    float h = sht31.readHumidity();
 
+    if (! isnan(t)) {  // check if 'is not a number'
+     Serial.print("Temp *C = "); Serial.print(t); Serial.print("\t\t");
+    } else { 
+      Serial.println("Failed to read temperature");
+    }
   
-  //SHT30
-  float t = sht31.readTemperature();
-  float h = sht31.readHumidity();
-
-  if (! isnan(t)) {  // check if 'is not a number'
-    Serial.print("Temp *C = "); Serial.print(t); Serial.print("\t\t");
-  } else { 
-    Serial.println("Failed to read temperature");
-  }
-  
-  if (! isnan(h)) {  // check if 'is not a number'
-    Serial.print("Hum. % = "); Serial.println(h);
-  } else { 
-    Serial.println("Failed to read humidity");
-  }
-
-  // Toggle heater enabled state every 30 seconds
-  // An ~3.0 degC temperature increase can be noted when heater is enabled
-  if (loopCnt >= 30) {
-    enableHeater = !enableHeater;
-    sht31.heater(enableHeater);
-    Serial.print("Heater Enabled State: ");
+    if (! isnan(h)) {  // check if 'is not a number'
+      Serial.print("Hum. % = "); Serial.println(h);
+    } else { 
+      Serial.println("Failed to read humidity");
+    }
+    // Toggle heater enabled state every 30 seconds
+    // An ~3.0 degC temperature increase can be noted when heater is enabled
+    if (loopCnt >= 30) {
+     enableHeater = !enableHeater;
+     sht31.heater(enableHeater);
+     Serial.print("Heater Enabled State: ");
     if (sht31.isHeaterEnabled())
-      Serial.println("ENABLED");
+       Serial.println("ENABLED");
     else
       Serial.println("DISABLED");
-    loopCnt = 0;
-  }
-  loopCnt++;
-
-  while (!mqtt.connected()) {
-        SerialMon.println("Reconnecting to MQTT");
-        // Reconnect every 10 seconds
-        uint32_t t = millis();
-        if (t - lastReconnectAttempt > 20000L) {
-            lastReconnectAttempt = t;
-            if (mqttConnect()) {
-                lastReconnectAttempt = 0;
-            }
-        }
-        delay(100);
-    }
-     
-  mqtt.publish("lilygo/sht30_h", String(dht_h).c_str());
+      loopCnt = 0;
+     }
+    loopCnt++;
   delay(100);
-  mqtt.publish("lilygo/sht30_t", String(dht_t).c_str());
 
-  delay(100);
   //DS18b20 sensor
   sensors.requestTemperatures(); 
   float temperatureC = sensors.getTempCByIndex(0);
@@ -312,6 +307,26 @@ void loop()
   Serial.print(temperatureC);
   Serial.print("ºC");
   Serial.println("\n");
+  delay(100);
+
+  //UV sensor
+  sensorValue = analogRead(analogInPin);
+  Serial.print("UV sensor: ");
+  Serial.print(sensorValue);
+  Serial.print("mV");
+  Serial.println("\n");
+
+    //////////////////////////////////////////
+    //***** Publishing to MQTT...***/////////
+    /////////////////////////////////////////
+
+  //SHT30    
+  mqtt.publish("lilygo/sht30_h", String(dht_h).c_str());
+  delay(100);
+  mqtt.publish("lilygo/sht30_t", String(dht_t).c_str());
+  delay(100);
+  
+  //DS18b20 sensor
   mqtt.publish("lilygo/ds18b20", String(temperatureC).c_str());
   delay(100);
 
@@ -330,11 +345,6 @@ void loop()
   delay(100);
 
   //UV sensor
-  sensorValue = analogRead(analogInPin);
-  Serial.print("UV sensor: ");
-  Serial.print(sensorValue);
-  Serial.print("mV");
-  Serial.println("\n");
   mqtt.publish("lilygo/uv", String(sensorValue).c_str());
   mqtt.loop();
   delay(2000);
