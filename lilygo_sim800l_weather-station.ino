@@ -221,12 +221,21 @@ void setup()
 
 void loop()
 {    
+
+  for (int i=0; i<=5; i++)
+  {
+
+    //Dht22
     float dht_h = dht.readHumidity();
+    delay(100);
     float dht_t = dht.readTemperature();
-  
+    delay(100);
     vbus_v = axp.getVbusVoltage();
+    delay(50);
     vbus_c = axp.getVbusCurrent();
+    delay(50);
     batt_v = axp.getBattVoltage();
+    delay(50);
     // axp.getBattPercentage();   // axp192 is not support percentage
     Serial.printf("VBUS:%.2f mV %.2f mA ,BATTERY: %.2f\n", vbus_v, vbus_c, batt_v);
 
@@ -248,18 +257,6 @@ void loop()
         }
 
   
-  while (!mqtt.connected()) {
-        SerialMon.println("Reconnecting to MQTT");
-        // Reconnect every 10 seconds
-        uint32_t t = millis();
-        if (t - lastReconnectAttempt > 20000L) {
-            lastReconnectAttempt = t;
-            if (mqttConnect()) {
-                lastReconnectAttempt = 0;
-            }
-        }
-        delay(100);
-    }
   //SHT30
   float t = sht31.readTemperature();
   float h = sht31.readHumidity();
@@ -276,8 +273,6 @@ void loop()
     Serial.println("Failed to read humidity");
   }
 
-  delay(1000);
-
   // Toggle heater enabled state every 30 seconds
   // An ~3.0 degC temperature increase can be noted when heater is enabled
   if (loopCnt >= 30) {
@@ -288,19 +283,31 @@ void loop()
       Serial.println("ENABLED");
     else
       Serial.println("DISABLED");
-
     loopCnt = 0;
   }
   loopCnt++;
-    
+
+  while (!mqtt.connected()) {
+        SerialMon.println("Reconnecting to MQTT");
+        // Reconnect every 10 seconds
+        uint32_t t = millis();
+        if (t - lastReconnectAttempt > 20000L) {
+            lastReconnectAttempt = t;
+            if (mqttConnect()) {
+                lastReconnectAttempt = 0;
+            }
+        }
+        delay(100);
+    }
+     
   mqtt.publish("lilygo/sht30_h", String(dht_h).c_str());
   delay(100);
   mqtt.publish("lilygo/sht30_t", String(dht_t).c_str());
 
+  delay(100);
   //DS18b20 sensor
   sensors.requestTemperatures(); 
   float temperatureC = sensors.getTempCByIndex(0);
-  delay(1000);
   Serial.print("DS18B20: ");
   Serial.print(temperatureC);
   Serial.print("ºC");
@@ -329,10 +336,9 @@ void loop()
   Serial.print("mV");
   Serial.println("\n");
   mqtt.publish("lilygo/uv", String(sensorValue).c_str());
-  delay(2000);
   mqtt.loop();
   delay(2000);
-
+  }
   if (deep_sleep == "true" && sleep_command == true)
   {
 
