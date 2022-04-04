@@ -349,6 +349,8 @@ void loop()
   mqtt.loop();
   delay(2000);
   }
+
+  //Deep-sleep condition
   if (deep_sleep == "true" && sleep_command == true)
   {
 
