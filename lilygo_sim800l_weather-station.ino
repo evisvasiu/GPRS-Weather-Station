@@ -7,6 +7,9 @@
 #include "Adafruit_SHT31.h"
 #include <OneWire.h>              //DS18B20
 #include <DallasTemperature.h>    //DS18B20
+#include <ArduinoJson.h>
+
+char data[300];
 
 #include "DHT.h"
 #define DHTPIN 14  
@@ -245,7 +248,6 @@ void loop()
     float dht_h = dht.readHumidity();
     float dht_t = dht.readTemperature();
     delay(100);
-
     //power module
     vbus_v = axp.getVbusVoltage();
     vbus_c = axp.getVbusCurrent();
@@ -320,34 +322,28 @@ void loop()
     //***** Publishing to MQTT...***/////////
     /////////////////////////////////////////
 
-  //SHT30    
-  mqtt.publish("lilygo/sht30_h", String(dht_h).c_str());
-  delay(100);
-  mqtt.publish("lilygo/sht30_t", String(dht_t).c_str());
-  delay(100);
-  
-  //DS18b20 sensor
-  mqtt.publish("lilygo/ds18b20", String(temperatureC).c_str());
-  delay(100);
-
-  //AXP192
-  mqtt.publish("lilygo/vbus_v", String(vbus_v).c_str());
-  delay(100);
-  mqtt.publish("lilygo/vbus_c", String(vbus_c).c_str());
-  delay(100);
-  mqtt.publish("lilygo/batt_v", String(batt_v).c_str());
-  delay(100);
-  mqtt.publish("lilygo/batt_charging_c", String(batt_charging_c).c_str());
-  delay(100);  
-  mqtt.publish("lilygo/batt_discharg_c", String(batt_discharg_c).c_str());
-  delay(100);
-  mqtt.publish("lilygo/charging", String(charging).c_str());
-  delay(100);
-
-  //UV sensor
-  mqtt.publish("lilygo/uv", String(sensorValue).c_str());
+  // Format your message to Octoblu here as JSON
+  // Include commas between each added element. 
+ String value = "\"dht_h\": " + String(dht_h)+",";
+ String value2 = "\"dht_t\": " + String(dht_t)+",";
+ String value3 = "\"vbus_v\": " + String(vbus_v)+",";
+ String value4 = "\"vbus_c\": " + String(vbus_c)+",";
+ String value5 = "\"batt_v\": " + String(batt_v)+",";
+ String value6 = "\"batt_charging_c\": " + String(batt_charging_c)+",";
+ String value7 = "\"batt_discharg_c\": " + String(batt_discharg_c)+",";
+ String value8 = "\"charging\": " + String(charging);
+ 
+  // Add all value together to send as one string. 
+  value = value + value2 + value3 + value4 + value5 + value6 + value7 + value8; 
+    // This sends off your payload. 
+  String payload = "{ \"devices\": \"*\",\"measurements\": {" + value + "}}";
+  delay(10);
+  payload.toCharArray(data, (payload.length() + 1));
+  delay(20);
+  mqtt.publish("lilygo/json", data);
+  delay(20);
   mqtt.loop();
-  delay(2000);
+  delay(4000);
   }
 
   //Deep-sleep condition
