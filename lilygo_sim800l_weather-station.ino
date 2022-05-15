@@ -23,6 +23,7 @@ DHT dht(DHTPIN, DHTTYPE);
 
 //BME280
 #define SEALEVELPRESSURE_HPA (1013.25)  //Sea level constant
+Adafruit_BME280 bme;  //I2C BME
 float bme_t = 999;
 float bme_p = 0;
 float bme_h = 999;
@@ -64,7 +65,7 @@ float sht30_t = 999;
 float sht30_h = 999;
 
 //DS18B20
-const int oneWireBus = 34;
+const int oneWireBus = 0;
 OneWire oneWire(oneWireBus);
 DallasTemperature sensors(&oneWire);  
 
@@ -174,7 +175,7 @@ RTC_DATA_ATTR int bootCount = 0;
 void setup()
 {
     pinMode(RTS_pin, OUTPUT);   //Anemometer direction control pin
-    Serial2.begin(4800, SERIAL_8N1, 12, 14);
+    Serial2.begin(4800, SERIAL_8N1, 12, 14);  //RX12  TX14
     delay(1000);
     
     // Set console baud rate
@@ -301,7 +302,7 @@ void loop()
   byte fs_buf[8];
   delay(20);
   Serial2.readBytes(fs_buf, 8);
-  if (fs_buf[0] == 1)         //filtering uncorrect data. Only data coming with first register equal to 1 are correct.
+  if (fs_buf[0] == 1 && fs_buf[1] == 3 && fs_buf[2] == 2)         //filtering uncorrect data. Only data coming with first register equal to 1 are correct.
     {
      wind_arr[n] = fs_buf[4];
      n = n+1;
@@ -309,8 +310,12 @@ void loop()
   Serial.print(" winds =  "); 
   Serial.print(fs_buf[4]*0.36);
   Serial.print(" km/h   ");
+  for (byte z = 0; z <8; z++){
+     Serial.print(fs_buf[z]);
+     Serial.print(" ");
+  }
   Serial.println();                  
-  delay(100);
+  delay(200);
   k=k+1;
   }                 
 
@@ -484,23 +489,24 @@ void loop()
  
  
   // Add all value together to send as one string. 
-  measurements = value + value2 + value3 + value4 + value5 + value6 + value7 + value8 + value9; 
-  power = value10 + value11 + value12 + value13 + value14 + value15;
+  String measurements = value + value2 + value3 + value4 + value5 + value6 + value7 + value8 + value9; 
+  String power = value10 + value11 + value12 + value13 + value14 + value15;
   
   // This sends off your payload. 
-  String payload1 = "{\"measurements\": {" + measurements + "}}";
-  String payload2 = "{\"power\": {" + power + "}}";
+  String payload1 = "{\"devices\": \"*\",\"measurements\": {" + measurements + "}}";
+  String payload2 = "{\"devices\": \"*\",\"power\": {" + power + "}}";
   delay(10);
   payload1.toCharArray(data, (payload1.length() + 1));
   payload2.toCharArray(data2, (payload2.length() + 1));
   delay(20);
-  mqtt.publish("lilygo/json", data);
+  mqtt.publish("lilygo/json1", data);
   delay(100);
-  mqtt.publish("lilygo/json", data2);
+  mqtt.publish("lilygo/json2", data2);
   delay(1000);
   mqtt.loop();
+  delay(1000);
   }
-
+/*
   //Deep-sleep condition
   if (deep_sleep == "true" && sleep_command == true)
   {
@@ -512,7 +518,6 @@ void loop()
   Serial.println("Going to sleep now");
   Serial.flush(); 
   esp_deep_sleep_start();
-
   }
-  
+  */
 }
