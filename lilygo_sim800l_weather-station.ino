@@ -9,12 +9,30 @@
 #include <DallasTemperature.h>    //DS18B20
 #include <ArduinoJson.h>
 
-char data[300];
 
+char data[300];                   //JSON data array
+char data2[300];
+/*
 #include "DHT.h"
-#define DHTPIN 14  
+#define DHTPIN 15  
 #define DHTTYPE DHT22
 DHT dht(DHTPIN, DHTTYPE);
+*/
+
+//BMP280
+float bmp_t = 999;
+float bmp_p = 999;
+
+
+//Anemometer serial comm.
+   
+#define RTS_pin    25    //RS485 Direction control
+#define RS485Transmit    HIGH
+#define RS485Receive     LOW
+float wind = 999;
+float wind_arr[20];
+float sum; 
+
 
 //AXP192
 float vbus_v;
@@ -30,16 +48,18 @@ bool sleep_command;
 String sleep_time_sec = "1200";
 
 
-const int analogInPin = A0;  // ESP8266 Analog Pin ADC0 = A0
-int sensorValue = 0;         // value read from the pot
+const int analogInPin = 2;  //Sensor connected to GPIO2
+int analog_uv = 0;         // value read from the pot
 
-//SHT30
+//SHT30 I2C
 bool enableHeater = false;
 uint8_t loopCnt = 0;
 Adafruit_SHT31 sht31 = Adafruit_SHT31();
+float sht30_t = 999;
+float sht30_h = 999;
 
 //DS18B20
-const int oneWireBus = 25;
+const int oneWireBus = 34;
 OneWire oneWire(oneWireBus);
 DallasTemperature sensors(&oneWire);  
 
@@ -51,6 +71,7 @@ DallasTemperature sensors(&oneWire);
 
 // Set serial for AT commands (to the module)
 #define SerialAT Serial1
+
 
 // See all AT commands, if wanted
 //#define DUMP_AT_COMMANDS
@@ -82,7 +103,7 @@ const char *topicLedStatus = "GsmClientTest/ledStatus";
 
 #ifdef DUMP_AT_COMMANDS
 #include <StreamDebugger.h>
-StreamDebugger debugger(SerialAT, SerialMon);
+StreamDebugger debugger(SerialAT, SerialMon, Serial2);
 TinyGsm modem(debugger);
 #else
 TinyGsm modem(SerialAT);
@@ -147,12 +168,16 @@ RTC_DATA_ATTR int bootCount = 0;
 
 void setup()
 {
+    pinMode(RTS_pin, OUTPUT);   //Anemometer direction control pin
+    Serial2.begin(4800, SERIAL_8N1, 12, 14);
+    delay(1000);
+    
     // Set console baud rate
     SerialMon.begin(115200);
     delay(10);
     
     sensors.begin();        //DS18B20
-    dht.begin();            //DHT22
+    //dht.begin();            //DHT22
 
     setupModem();
 
@@ -220,11 +245,12 @@ void setup()
   else
     Serial.println("DISABLED");
 
+  
 }
 
 void loop()
 {    
-  for (int i=1; i<=5; i++)
+  for (byte j=1; j<=5; j++)
   {
     //checking connection to MQTT
     while (!mqtt.connected()) {
@@ -243,11 +269,64 @@ void loop()
     //////////////////////////////////////////
     //***** getting sensor values first...***
     /////////////////////////////////////////
+
+    //Anemometer
+  byte k = 0;
+  byte n = 0;
+
+  while (k<5)
+  {
+  digitalWrite(RTS_pin, RS485Transmit);
+
+  byte fs_request[] = {
+    0x01,  // Devices Address
+    0x03,  // Function Code
+    0x00,  // Start Address
+    0x00,  // Start Address
+    0x00,  // Read Points
+    0x01,  // Read Points  
+    0x84,  // CRC LOW
+    0x0A   // CRC HIGH
+    }; 
     
+  Serial2.write(fs_request, sizeof(fs_request));
+  Serial2.flush();
+  digitalWrite(RTS_pin, RS485Receive);
+  byte fs_buf[8];
+  delay(20);
+  Serial2.readBytes(fs_buf, 8);
+  if (fs_buf[0] == 1)         //filtering uncorrect data. Only data coming with first register equal to 1 are correct.
+    {
+     wind_arr[n] = fs_buf[4];
+     n = n+1;
+    }
+  Serial.print(" winds =  "); 
+  Serial.print(fs_buf[4]*0.36);
+  Serial.print(" km/h   ");
+  Serial.println();                  
+  delay(100);
+  k=k+1;
+  }                 
+
+ for (byte m=0; m<n; m++)
+  {
+    sum += wind_arr[m];
+    wind = (sum/n)*0.36;
+    Serial.print(wind_arr[m]*0.36);
+    Serial.print(" ");
+  }
+  sum=0;
+  Serial.println();
+  Serial.print("Wind average: ");
+  Serial.print(wind);
+  Serial.println(" km/h");
+
+ /*
     //Dht22
     float dht_h = dht.readHumidity();
     float dht_t = dht.readTemperature();
     delay(100);
+ */
     //power module
     vbus_v = axp.getVbusVoltage();
     vbus_c = axp.getVbusCurrent();
@@ -273,19 +352,21 @@ void loop()
     delay(100); 
     
     //SHT30
-    float t = sht31.readTemperature();
-    float h = sht31.readHumidity();
+    sht30_t = sht31.readTemperature();
+    sht30_h = sht31.readHumidity();
 
-    if (! isnan(t)) {  // check if 'is not a number'
-     Serial.print("Temp *C = "); Serial.print(t); Serial.print("\t\t");
+    if (! isnan(sht30_t)) {  // check if 'is not a number'
+     Serial.print("Temp *C = "); Serial.print(sht30_t); Serial.print("\t\t");
     } else { 
       Serial.println("Failed to read temperature");
+      sht30_t = 999;
     }
   
-    if (! isnan(h)) {  // check if 'is not a number'
-      Serial.print("Hum. % = "); Serial.println(h);
+    if (! isnan(sht30_h)) {  // check if 'is not a number'
+      Serial.print("Hum. % = "); Serial.println(sht30_h);
     } else { 
       Serial.println("Failed to read humidity");
+      sht30_h = 999;
     }
     // Toggle heater enabled state every 30 seconds
     // An ~3.0 degC temperature increase can be noted when heater is enabled
@@ -305,45 +386,60 @@ void loop()
   //DS18b20 sensor
   sensors.requestTemperatures(); 
   float temperatureC = sensors.getTempCByIndex(0);
-  Serial.print("DS18B20: ");
-  Serial.print(temperatureC);
-  Serial.print("ºC");
-  Serial.println("\n");
-  delay(100);
+  if (! isnan(temperatureC))  // check if 'is not a number'
+    {  
+      Serial.print("DS18B20: ");
+      Serial.print(temperatureC);
+      Serial.print("ºC");
+      Serial.println("\n");
+    } else { 
+      Serial.println("Failed to read temperature");
+      temperatureC = 999;
+    }
 
   //UV sensor
-  sensorValue = analogRead(analogInPin);
+  analog_uv = analogRead(analogInPin);
   Serial.print("UV sensor: ");
-  Serial.print(sensorValue);
+  Serial.print(analog_uv);
   Serial.print("mV");
   Serial.println("\n");
 
     //////////////////////////////////////////
-    //***** Publishing to MQTT...***/////////
+    //***** Publishing to MQTT...*** /////////
     /////////////////////////////////////////
 
-  // Format your message to Octoblu here as JSON
-  // Include commas between each added element. 
- String value = "\"dht_h\": " + String(dht_h)+",";
- String value2 = "\"dht_t\": " + String(dht_t)+",";
- String value3 = "\"vbus_v\": " + String(vbus_v)+",";
- String value4 = "\"vbus_c\": " + String(vbus_c)+",";
- String value5 = "\"batt_v\": " + String(batt_v)+",";
- String value6 = "\"batt_charging_c\": " + String(batt_charging_c)+",";
- String value7 = "\"batt_discharg_c\": " + String(batt_discharg_c)+",";
- String value8 = "\"charging\": " + String(charging);
+  // Formating messages as JSON
+ String value = "\"sht30_t\": " + String(sht30_t)+",";
+ String value2 = "\"sht30_h\": " + String(sht30_h)+",";
+ String value3 = "\"DS18b20\": " + String(temperatureC)+",";
+ String value4 = "\"wind\": " + String(wind)+",";
+ String value5 = "\"analog_uv\": " + String(analog_uv)+",";
+ String value6 = "\"bmp_t\": " + String(bmp_t)+",";
+ String value7 = "\"bmp_p\": " + String(bmp_p);
+ 
+ String value8 = "\"vbus_v\": " + String(vbus_v)+",";
+ String value9 = "\"vbus_c\": " + String(vbus_c)+",";
+ String value10 = "\"batt_v\": " + String("999")+",";
+ String value11 = "\"batt_charging_c\": " + String("999")+",";
+ String value12 = "\"batt_discharg_c\": " + String("999")+",";
+ String value13 = "\"charging\": " + String("999");
+ 
  
   // Add all value together to send as one string. 
-  value = value + value2 + value3 + value4 + value5 + value6 + value7 + value8; 
+  value = value + value2 + value3 + value4 + value5 + value6 + value7; 
+  value8 = value8 + value9 + value10 + value11 + value12 + value13;
     // This sends off your payload. 
-  String payload = "{ \"devices\": \"*\",\"measurements\": {" + value + "}}";
+  String payload1 = "{\"measurements\": {" + value + "}}";
+  String payload2 = "{\"power\": {" + value8 + "}}";
   delay(10);
-  payload.toCharArray(data, (payload.length() + 1));
+  payload1.toCharArray(data, (payload1.length() + 1));
+  payload2.toCharArray(data2, (payload2.length() + 1));
   delay(20);
   mqtt.publish("lilygo/json", data);
-  delay(20);
+  delay(100);
+  mqtt.publish("lilygo/json", data2);
+  delay(1000);
   mqtt.loop();
-  delay(4000);
   }
 
   //Deep-sleep condition
