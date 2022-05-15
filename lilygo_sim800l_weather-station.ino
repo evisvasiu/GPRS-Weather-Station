@@ -8,10 +8,12 @@
 #include <OneWire.h>              //DS18B20
 #include <DallasTemperature.h>    //DS18B20
 #include <ArduinoJson.h>
+#include <Adafruit_BME280.h>      //BME280
 
 
-char data[300];                   //JSON data array
-char data2[300];
+char data[300];                   //JSON measurements data
+char data2[300];                  //JSON power parameterrs
+
 /*
 #include "DHT.h"
 #define DHTPIN 15  
@@ -19,9 +21,12 @@ char data2[300];
 DHT dht(DHTPIN, DHTTYPE);
 */
 
-//BMP280
-float bmp_t = 999;
-float bmp_p = 999;
+//BME280
+#define SEALEVELPRESSURE_HPA (1013.25)  //Sea level constant
+float bme_t = 999;
+float bme_p = 0;
+float bme_h = 999;
+float bme_a = 0;
 
 
 //Anemometer serial comm.
@@ -178,6 +183,7 @@ void setup()
     
     sensors.begin();        //DS18B20
     //dht.begin();            //DHT22
+    bool status = bme.begin(0x76);   //bme I2C Address  
 
     setupModem();
 
@@ -403,9 +409,59 @@ void loop()
   Serial.print(analog_uv);
   Serial.print("mV");
   Serial.println("\n");
+  
+  //BME280
+  float bme_t = bme.readTemperature();
+  if (! isnan(bme_t))  // check if 'is not a number'
+    {
+      Serial.print("BME Temperature: ");
+      Serial.print(bme_t);
+      Serial.println("*C");
+    }
+  else {
+    Serial.println("Failed to read temperature");
+    bme_t = 999;
+  }
+  
+  float bme_h = bme.readHumidity();
+   if (! isnan(bme_h))  // check if 'is not a number'
+    {
+      Serial.print("BME Humidity: ");
+      Serial.print(bme_h);
+      Serial.println("%");
+    }
+  else {
+    Serial.println("Failed to read humidity");
+    bme_h = 999;
+  }
+  
+  float bme_p = bme.readPressure() / 100.0;
+   if (! isnan(bme_p))  // check if 'is not a number'
+    {
+      Serial.print("BME Pressure: ");
+      Serial.print(bme_p);
+      Serial.println("hPa");
+    }
+  else {
+    Serial.println("Failed to read atmosferic pressure");
+    bme_p = 0;
+  }
+  
+  float bme_a = bme.readAltitude(SEALEVELPRESSURE_HPA);
+   if (! isnan(bme_a))  // check if 'is not a number'
+    {
+      Serial.print("Altitude: ");
+      Serial.print(bme_a);
+      Serial.println("m");
+      Serial.println("\n");
+    }
+  else {
+    Serial.println("Failed to read atmosferic pressure");
+    bme_a = 0;
+  }
 
     //////////////////////////////////////////
-    //***** Publishing to MQTT...*** /////////
+    // ***** Publishing to MQTT...*** /////////
     /////////////////////////////////////////
 
   // Formating messages as JSON
@@ -414,23 +470,26 @@ void loop()
  String value3 = "\"DS18b20\": " + String(temperatureC)+",";
  String value4 = "\"wind\": " + String(wind)+",";
  String value5 = "\"analog_uv\": " + String(analog_uv)+",";
- String value6 = "\"bmp_t\": " + String(bmp_t)+",";
- String value7 = "\"bmp_p\": " + String(bmp_p);
+ String value6 = "\"bme_t\": " + String(bme_t)+",";
+ String value7 = "\"bme_h\": " + String(bme_h)+",";
+ String value8 = "\"bme_p\": " + String(bme_p)+",";
+ String value9 = "\"bme_a\": " + String(bme_a);
  
- String value8 = "\"vbus_v\": " + String(vbus_v)+",";
- String value9 = "\"vbus_c\": " + String(vbus_c)+",";
- String value10 = "\"batt_v\": " + String("999")+",";
- String value11 = "\"batt_charging_c\": " + String("999")+",";
- String value12 = "\"batt_discharg_c\": " + String("999")+",";
- String value13 = "\"charging\": " + String("999");
+ String value10 = "\"vbus_v\": " + String(vbus_v)+",";
+ String value11 = "\"vbus_c\": " + String(vbus_c)+",";
+ String value12 = "\"batt_v\": " + String("999")+",";
+ String value13 = "\"batt_charging_c\": " + String("999")+",";
+ String value14 = "\"batt_discharg_c\": " + String("999")+",";
+ String value15 = "\"charging\": " + String("999");
  
  
   // Add all value together to send as one string. 
-  value = value + value2 + value3 + value4 + value5 + value6 + value7; 
-  value8 = value8 + value9 + value10 + value11 + value12 + value13;
-    // This sends off your payload. 
-  String payload1 = "{\"measurements\": {" + value + "}}";
-  String payload2 = "{\"power\": {" + value8 + "}}";
+  measurements = value + value2 + value3 + value4 + value5 + value6 + value7 + value8 + value9; 
+  power = value10 + value11 + value12 + value13 + value14 + value15;
+  
+  // This sends off your payload. 
+  String payload1 = "{\"measurements\": {" + measurements + "}}";
+  String payload2 = "{\"power\": {" + power + "}}";
   delay(10);
   payload1.toCharArray(data, (payload1.length() + 1));
   payload2.toCharArray(data2, (payload2.length() + 1));
