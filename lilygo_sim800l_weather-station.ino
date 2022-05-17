@@ -32,7 +32,7 @@ float bme_a = 0;
 
 //Anemometer serial comm.
    
-#define RTS_pin    25    //RS485 Direction control
+#define RTS_pin    18    //RS485 Direction control
 #define RS485Transmit    HIGH
 #define RS485Receive     LOW
 float wind = 999;
@@ -51,10 +51,10 @@ bool charging;
 //deep sleep
 String deep_sleep = "true";
 bool sleep_command;
-String sleep_time_sec = "1200";
+String sleep_time_sec = "30";
 
 
-const int analogInPin = 2;  //Sensor connected to GPIO2
+const int analogInPin = 35;  //Sensor connected to GPIO2
 int analog_uv = 0;         // value read from the pot
 
 //SHT30 I2C
@@ -87,7 +87,6 @@ DallasTemperature sensors(&oneWire);
 
 // Define how you're planning to connect to the internet
 #define TINY_GSM_USE_GPRS true
-
 
 // set GSM PIN, if any
 #define GSM_PIN ""
@@ -174,17 +173,11 @@ RTC_DATA_ATTR int bootCount = 0;
 
 void setup()
 {
-    pinMode(RTS_pin, OUTPUT);   //Anemometer direction control pin
-    Serial2.begin(4800, SERIAL_8N1, 12, 14);  //RX12  TX14
-    delay(1000);
-    
     // Set console baud rate
     SerialMon.begin(115200);
     delay(10);
     
-    sensors.begin();        //DS18B20
-    //dht.begin();            //DHT22
-    bool status = bme.begin(0x76);   //bme I2C Address  
+
 
     setupModem();
 
@@ -238,7 +231,17 @@ void setup()
     mqtt.setServer(broker, 1883);
     mqtt.setCallback(mqttCallback);
     mqttConnect();
-   
+
+    pinMode(13, OUTPUT);
+    digitalWrite(13, HIGH);
+
+    sensors.begin();        //DS18B20
+    //dht.begin();            //DHT22
+    bool status = bme.begin(0x76);   //bme I2C Address  
+
+    pinMode(RTS_pin, OUTPUT);   //Anemometer direction control pin
+    Serial2.begin(4800, SERIAL_8N1, 14, 25);  //RX12  TX14
+    delay(1000);
 
   Serial.println("SHT31 test");
   if (! sht31.begin(0x44)) {   // Set to 0x45 for alternate i2c addr
@@ -315,7 +318,7 @@ void loop()
      Serial.print(" ");
   }
   Serial.println();                  
-  delay(200);
+  delay(500);
   k=k+1;
   }                 
 
@@ -506,7 +509,7 @@ void loop()
   mqtt.loop();
   delay(1000);
   }
-/*
+
   //Deep-sleep condition
   if (deep_sleep == "true" && sleep_command == true)
   {
@@ -519,5 +522,5 @@ void loop()
   Serial.flush(); 
   esp_deep_sleep_start();
   }
-  */
+  
 }
