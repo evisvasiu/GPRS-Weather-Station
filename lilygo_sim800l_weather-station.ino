@@ -51,7 +51,7 @@ bool charging;
 //deep sleep
 String deep_sleep = "true";
 bool sleep_command;
-String sleep_time_sec = "30";
+String sleep_time_sec = "1200";
 
 
 const int analogInPin = 35;  //Sensor connected to GPIO2
@@ -485,10 +485,10 @@ void loop()
  
  String value10 = "\"vbus_v\": " + String(vbus_v)+",";
  String value11 = "\"vbus_c\": " + String(vbus_c)+",";
- String value12 = "\"batt_v\": " + String("999")+",";
- String value13 = "\"batt_charging_c\": " + String("999")+",";
- String value14 = "\"batt_discharg_c\": " + String("999")+",";
- String value15 = "\"charging\": " + String("999");
+ String value12 = "\"batt_v\": " + String(batt_v)+",";
+ String value13 = "\"batt_charging_c\": " + String(batt_charging_c)+",";
+ String value14 = "\"batt_discharg_c\": " + String(batt_discharg_c)+",";
+ String value15 = "\"charging\": " + String(charging);
  
  
   // Add all value together to send as one string. 
@@ -505,7 +505,7 @@ void loop()
   mqtt.publish("lilygo/json1", data);
   delay(100);
   mqtt.publish("lilygo/json2", data2);
-  delay(1000);
+  delay(4000);
   mqtt.loop();
   delay(1000);
   }
