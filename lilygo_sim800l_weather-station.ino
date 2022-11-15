@@ -260,8 +260,7 @@ void setup()
 
 void loop()
 {    
-  for (byte j=1; j<=5; j++)
-  {
+  
     //checking connection to MQTT
     while (!mqtt.connected()) {
         SerialMon.println("Reconnecting to MQTT");
@@ -284,7 +283,7 @@ void loop()
   byte k = 0;
   byte n = 0;
 
-  while (k<5)
+  while (k<2)
   {
   digitalWrite(RTS_pin, RS485Transmit);
 
@@ -508,7 +507,7 @@ void loop()
   delay(4000);
   mqtt.loop();
   delay(1000);
-  }
+  
 
   //Deep-sleep condition
   if (deep_sleep == "true" && sleep_command == true)
