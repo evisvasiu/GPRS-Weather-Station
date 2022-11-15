@@ -10,6 +10,7 @@
 #include <ArduinoJson.h>
 #include <Adafruit_BME280.h>      //BME280
 
+#define trigerPin 34   
 
 char data[300];                   //JSON measurements data
 char data2[300];                  //JSON power parameterrs
@@ -20,6 +21,8 @@ char data2[300];                  //JSON power parameterrs
 #define DHTTYPE DHT22
 DHT dht(DHTPIN, DHTTYPE);
 */
+
+int analog_uv = 0;
 
 //BME280
 #define SEALEVELPRESSURE_HPA (1013.25)  //Sea level constant
@@ -54,9 +57,6 @@ bool sleep_command;
 String sleep_time_sec = "1200";
 
 
-const int analogInPin = 35;  //Sensor connected to GPIO2
-int analog_uv = 0;         // value read from the pot
-
 //SHT30 I2C
 bool enableHeater = false;
 uint8_t loopCnt = 0;
@@ -65,7 +65,7 @@ float sht30_t = 999;
 float sht30_h = 999;
 
 //DS18B20
-const int oneWireBus = 0;
+const int oneWireBus = 2;
 OneWire oneWire(oneWireBus);
 DallasTemperature sensors(&oneWire);  
 
@@ -173,10 +173,12 @@ RTC_DATA_ATTR int bootCount = 0;
 
 void setup()
 {
+      
     // Set console baud rate
     SerialMon.begin(115200);
     delay(10);
     
+    pinMode(trigerPin, OUTPUT);
 
 
     setupModem();
@@ -411,7 +413,7 @@ void loop()
     }
 
   //UV sensor
-  analog_uv = analogRead(analogInPin);
+  analog_uv = 0;
   Serial.print("UV sensor: ");
   Serial.print(analog_uv);
   Serial.print("mV");
@@ -507,6 +509,8 @@ void loop()
   delay(4000);
   mqtt.loop();
   delay(1000);
+
+  digitalWrite(trigerPin, HIGH);
   
 
   //Deep-sleep condition
