@@ -1,3 +1,14 @@
+/* Addresses used:
+ *  1. DS18B20 - 0
+ *  BME280 - I2C
+ *  SHT30 - I2C
+ *  UV - I2C
+ *  LED diplay - I2C
+ *  Timer triger - 19
+ *  Anemometer - RTS 18, RX TX 14 25
+ *  Battery valtage - 2
+ */
+
 
 #include <axp20x.h>
 #define SIM800L_AXP192_VERSION_20200327
@@ -9,7 +20,18 @@
 #include <DallasTemperature.h>    //DS18B20
 #include <ArduinoJson.h>
 #include <Adafruit_BME280.h>      //BME280
+#include <Adafruit_GFX.h>         //Display
+#include <Adafruit_SSD1306.h>     //Display
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 32 // OLED display height, in pixels
+#define SCREEN_ADDRESS 0x3C // 0x3C for 128x32
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+String disp_txt;
+String sensor_values;
 
+
+
+#define trigerPin 19              //Timer triger
 
 char data[300];                   //JSON measurements data
 char data2[300];                  //JSON power parameterrs
@@ -20,6 +42,10 @@ char data2[300];                  //JSON power parameterrs
 #define DHTTYPE DHT22
 DHT dht(DHTPIN, DHTTYPE);
 */
+
+
+
+int analog_uv = 0;
 
 //BME280
 #define SEALEVELPRESSURE_HPA (1013.25)  //Sea level constant
@@ -54,9 +80,6 @@ bool sleep_command;
 String sleep_time_sec = "1200";
 
 
-const int analogInPin = 35;  //Sensor connected to GPIO2
-int analog_uv = 0;         // value read from the pot
-
 //SHT30 I2C
 bool enableHeater = false;
 uint8_t loopCnt = 0;
@@ -65,8 +88,8 @@ float sht30_t = 999;
 float sht30_h = 999;
 
 //DS18B20
-const int oneWireBus = 0;
-OneWire oneWire(oneWireBus);
+#define ONE_WIRE_BUS 0          //pin 0
+OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);  
 
 // Select your modem:
@@ -147,17 +170,21 @@ boolean mqttConnect()
 {
     SerialMon.print("Connecting to ");
     SerialMon.print(broker);
+    disp_txt = "Connecting to \n" + String(broker) + "...\n";
+    testdrawstyles(disp_txt, 1);
 
     // Connect to MQTT Broker
 
     // Or, if you want to authenticate MQTT:
-boolean status = mqtt.connect("GsmClientName", "jezerca", "Password@2");
+    boolean status = mqtt.connect("GsmClientName", "jezerca", "Password@2");
 
     if (status == false) {
         SerialMon.println(" fail");
         return false;
     }
     SerialMon.println(" success");
+    disp_txt += "successfully connected\n";
+    testdrawstyles(disp_txt,1);
     lastReconnectAttempt = 0;
     mqtt.publish(topicInit, "Started");
     mqtt.subscribe("lilygo/deep_sleep",1);
@@ -173,15 +200,38 @@ RTC_DATA_ATTR int bootCount = 0;
 
 void setup()
 {
+      
     // Set console baud rate
     SerialMon.begin(115200);
     delay(10);
-    
+
+    // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
+    if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;); // Don't proceed, loop forever
+  }
+    // Show initial display buffer contents on the screen --
+    // the library initializes this with an Adafruit splash screen.
+    display.display();
+    delay(2000); // 
+    display.clearDisplay();                        // Clear the buffer
+    display.drawPixel(10, 10, SSD1306_WHITE);     // Draw a single pixel in white
+    display.display();
+    delay(2000);
+
+  //testdrawchar();      // Draw characters of the default font
+  //testdrawstyles();    // Draw 'stylized' characters
+  //testscrolltext();    // Draw scrolling text
+  //testdrawbitmap();    // Draw a small bitmap image
+
+    pinMode(trigerPin, OUTPUT);   //Triger for the timer
 
 
     setupModem();
 
     SerialMon.println("Wait...");
+    disp_txt += "Wait... \n";
+    testdrawstyles(disp_txt,1);
 
     // Set GSM module baud rate and UART pins
     SerialAT.begin(57600, SERIAL_8N1, MODEM_RX, MODEM_TX);
@@ -191,12 +241,17 @@ void setup()
     // Restart takes quite some time
     // To skip it, call init() instead of restart()
     SerialMon.println("Initializing modem...");
+    disp_txt += "Initializing modem...\n";
+    testdrawstyles(disp_txt,1);
     //modem.restart();
     modem.init();
 
     String modemInfo = modem.getModemInfo();
     SerialMon.print("Modem Info: ");
     SerialMon.println(modemInfo);
+    disp_txt += "Modem Info: " + modemInfo + "\n";
+    testdrawstyles(disp_txt, 1);
+    
 
 #if TINY_GSM_USE_GPRS
     // Unlock your SIM card with a PIN if needed
@@ -206,13 +261,17 @@ void setup()
 #endif
 
     SerialMon.print("Waiting for network...");
+    disp_txt = "Waiting for network..\n";
+    testdrawstyles(disp_txt,1);
     while (!modem.waitForNetwork()) {
       SerialMon.print(".");
       }
       SerialMon.println(" success");
 
     if (modem.isNetworkConnected()) {
-        SerialMon.println("Network connected");
+        SerialMon.println("Network connected\n");
+        disp_txt += "Network connected";
+        testdrawstyles(disp_txt,1);
     }
 
     // GPRS connection parameters are usually set after network registration
@@ -224,7 +283,9 @@ void setup()
       SerialMon.println(" success");
 
     if (modem.isGprsConnected()) {
-        SerialMon.println("GPRS connected");
+        SerialMon.println("GPRS connected\n");
+        disp_txt += "GPRS connected";
+        testdrawstyles(disp_txt,1);
     }
 
     // MQTT Broker setup
@@ -258,13 +319,24 @@ void setup()
   
 }
 
+//Display text function
+void testdrawstyles(String disp_text, int text_size) {
+  display.clearDisplay();
+  display.setTextSize(text_size);             // Normal 1:1 pixel scale
+  display.setTextColor(SSD1306_WHITE);        // Draw white text
+  display.setCursor(0,0);             // Start at top-left corner
+  display.println(disp_text);
+  display.display();
+}
+
 void loop()
-{    
-  for (byte j=1; j<=5; j++)
-  {
+{   
+    
     //checking connection to MQTT
     while (!mqtt.connected()) {
         SerialMon.println("Reconnecting to MQTT");
+        testdrawstyles("Reconnecting to MQTT", 1);
+        
         // Reconnect every 10 seconds
         uint32_t t = millis();
         if (t - lastReconnectAttempt > 20000L) {
@@ -284,7 +356,7 @@ void loop()
   byte k = 0;
   byte n = 0;
 
-  while (k<5)
+  while (k<2)
   {
   digitalWrite(RTS_pin, RS485Transmit);
 
@@ -320,8 +392,10 @@ void loop()
   Serial.println();                  
   delay(500);
   k=k+1;
-  }                 
+  }
 
+ 
+  //mean value
  for (byte m=0; m<n; m++)
   {
     sum += wind_arr[m];
@@ -334,6 +408,13 @@ void loop()
   Serial.print("Wind average: ");
   Serial.print(wind);
   Serial.println(" km/h");
+  if (wind != 999) {
+  sensor_values += "Wind[km/h] = " + String(wind) + "\n";
+  } 
+  else {
+    sensor_values = "Anem. disconnected\n";
+    }
+
 
  /*
     //Dht22
@@ -343,41 +424,51 @@ void loop()
  */
     //power module
     vbus_v = axp.getVbusVoltage();
+    delay(100);
     vbus_c = axp.getVbusCurrent();
-    batt_v = axp.getBattVoltage();
+    delay(100);
+    //batt_v = axp.getBattVoltage();
     // axp.getBattPercentage();   // axp192 is not support percentage
-    Serial.printf("VBUS:%.2f mV %.2f mA ,BATTERY: %.2f\n", vbus_v, vbus_c, batt_v);
-        if (axp.isChargeing()) {
-            batt_charging_c = axp.getBattChargeCurrent();
-            charging = true;
-            Serial.print("Charge:");
-            Serial.print(batt_charging_c);
-            Serial.println(" mA");
-            batt_discharg_c = 0;
-        } else {
-            // Show current consumption
-            batt_discharg_c = axp.getBattDischargeCurrent();
-            charging = false;
-            Serial.print("Discharge:");
-            Serial.print(batt_discharg_c);
-            Serial.println(" mA");
-            batt_charging_c = 0;
-        }
+    Serial.printf("VBUS:%.2f mV %.2f mA\n", vbus_v, vbus_c);
+//        if (axp.isChargeing()) {
+//            batt_charging_c = axp.getBattChargeCurrent();
+//            charging = true;
+//            Serial.print("Charge:");
+//            Serial.print(batt_charging_c);
+//            Serial.println(" mA");
+//            batt_discharg_c = 0;
+//        } else {
+//            // Show current consumption
+//            batt_discharg_c = axp.getBattDischargeCurrent();
+//            charging = false;
+//            Serial.print("Discharge:");
+//            Serial.print(batt_discharg_c);
+//            Serial.println(" mA");
+//            batt_charging_c = 0;
+//        }
+
     delay(100); 
+
+    sensor_values += "Board [mA] = " + String(vbus_c) + "\n";
+
     
     //SHT30
     sht30_t = sht31.readTemperature();
     sht30_h = sht31.readHumidity();
 
     if (! isnan(sht30_t)) {  // check if 'is not a number'
-     Serial.print("Temp *C = "); Serial.print(sht30_t); Serial.print("\t\t");
+     Serial.print("SHT30 Temp *C = "); Serial.print(sht30_t); Serial.print("\t\t");
+     sensor_values += "SHT30 [*C] = " + String(sht30_t) + "\n";
+     testdrawstyles(sensor_values, 1);
     } else { 
-      Serial.println("Failed to read temperature");
+      Serial.println("Failed to read SHT30 temperature");
+      sensor_values += "SHT30 disconnected\n";  
       sht30_t = 999;
     }
   
     if (! isnan(sht30_h)) {  // check if 'is not a number'
       Serial.print("Hum. % = "); Serial.println(sht30_h);
+      sensor_values += "SHT30 [%] = " + String(sht30_h) + "\n";
     } else { 
       Serial.println("Failed to read humidity");
       sht30_h = 999;
@@ -400,23 +491,29 @@ void loop()
   //DS18b20 sensor
   sensors.requestTemperatures(); 
   float temperatureC = sensors.getTempCByIndex(0);
-  if (! isnan(temperatureC))  // check if 'is not a number'
+  if (! isnan(temperatureC) && temperatureC != -127)  // check if 'is not a number'
     {  
       Serial.print("DS18B20: ");
       Serial.print(temperatureC);
       Serial.print("ºC");
       Serial.println("\n");
+      sensor_values += "DS18B20 [*C] = " + String(temperatureC) + "\n";
     } else { 
       Serial.println("Failed to read temperature");
       temperatureC = 999;
+      sensor_values += "DS18B20 disconnected";
     }
-
+  
+  testdrawstyles(sensor_values,1); //Display
+  delay(2000);
+  
   //UV sensor
-  analog_uv = analogRead(analogInPin);
+  analog_uv = 0;
   Serial.print("UV sensor: ");
   Serial.print(analog_uv);
   Serial.print("mV");
   Serial.println("\n");
+  
   
   //BME280
   float bme_t = bme.readTemperature();
@@ -424,7 +521,7 @@ void loop()
     {
       Serial.print("BME Temperature: ");
       Serial.print(bme_t);
-      Serial.println("*C");
+      Serial.println("*C");     
     }
   else {
     Serial.println("Failed to read temperature");
@@ -461,12 +558,16 @@ void loop()
       Serial.print("Altitude: ");
       Serial.print(bme_a);
       Serial.println("m");
-      Serial.println("\n");
+      Serial.println("\n");    
     }
   else {
     Serial.println("Failed to read atmosferic pressure");
     bme_a = 0;
   }
+  if (bme_p == 0) {
+    sensor_values = "BME disconnected";}
+  else {sensor_values = "BME [*C] = " + String(bme_t) + "\nBME [%] = " + String(bme_h) + "\nBME [hPa] = " + String(bme_p) + "\nBME [m] = " + String(bme_a);}
+  
 
     //////////////////////////////////////////
     // ***** Publishing to MQTT...*** /////////
@@ -505,10 +606,14 @@ void loop()
   mqtt.publish("lilygo/json1", data);
   delay(100);
   mqtt.publish("lilygo/json2", data2);
-  delay(4000);
+  delay(3000);
   mqtt.loop();
+  testdrawstyles(sensor_values,1);      //Display
   delay(1000);
-  }
+
+
+  digitalWrite(trigerPin, HIGH);
+  
 
   //Deep-sleep condition
   if (deep_sleep == "true" && sleep_command == true)
