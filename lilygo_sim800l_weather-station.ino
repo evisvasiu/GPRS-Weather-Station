@@ -29,7 +29,6 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 String disp_txt;
 String sensor_values;
 
-#define trigerPin 34   
 
 
 #define trigerPin 19              //Timer triger
@@ -44,11 +43,8 @@ char data2[300];                  //JSON power parameterrs
 DHT dht(DHTPIN, DHTTYPE);
 */
 
-<<<<<<< HEAD
 
 
-=======
->>>>>>> 5c4d8824838e81d6413600966b0197080c452488
 int analog_uv = 0;
 
 //BME280
@@ -92,13 +88,8 @@ float sht30_t = 999;
 float sht30_h = 999;
 
 //DS18B20
-<<<<<<< HEAD
 #define ONE_WIRE_BUS 0          //pin 0
 OneWire oneWire(ONE_WIRE_BUS);
-=======
-const int oneWireBus = 2;
-OneWire oneWire(oneWireBus);
->>>>>>> 5c4d8824838e81d6413600966b0197080c452488
 DallasTemperature sensors(&oneWire);  
 
 // Select your modem:
@@ -213,7 +204,6 @@ void setup()
     // Set console baud rate
     SerialMon.begin(115200);
     delay(10);
-<<<<<<< HEAD
 
     // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
     if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
@@ -235,10 +225,6 @@ void setup()
   //testdrawbitmap();    // Draw a small bitmap image
 
     pinMode(trigerPin, OUTPUT);   //Triger for the timer
-=======
-    
-    pinMode(trigerPin, OUTPUT);
->>>>>>> 5c4d8824838e81d6413600966b0197080c452488
 
 
     setupModem();
@@ -344,13 +330,8 @@ void testdrawstyles(String disp_text, int text_size) {
 }
 
 void loop()
-<<<<<<< HEAD
 {   
     
-=======
-{    
-  
->>>>>>> 5c4d8824838e81d6413600966b0197080c452488
     //checking connection to MQTT
     while (!mqtt.connected()) {
         SerialMon.println("Reconnecting to MQTT");
@@ -630,10 +611,7 @@ void loop()
   testdrawstyles(sensor_values,1);      //Display
   delay(1000);
 
-<<<<<<< HEAD
 
-=======
->>>>>>> 5c4d8824838e81d6413600966b0197080c452488
   digitalWrite(trigerPin, HIGH);
   
 
