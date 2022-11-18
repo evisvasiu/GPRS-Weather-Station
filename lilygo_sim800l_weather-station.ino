@@ -307,7 +307,7 @@ void setup()
   Serial.println("SHT31 test");
   if (! sht31.begin(0x44)) {   // Set to 0x45 for alternate i2c addr
     Serial.println("Couldn't find SHT31");
-    delay(1000);
+    while (1) delay(1);
   }
 
   Serial.print("Heater Enabled State: ");
