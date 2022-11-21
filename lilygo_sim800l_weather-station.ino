@@ -4,8 +4,8 @@
  *  SHT30 - I2C
  *  UV - I2C
  *  LED diplay - I2C
- *  Timer triger - 19
- *  Anemometer - RTS 18, RX TX 14 25
+ *  Timer triger - 18
+ *  Anemometer - RTS 19, RX TX 14 25
  *  Battery valtage - 2
  */
 
@@ -30,8 +30,8 @@ String disp_txt;
 String sensor_values;
 
 
-
-#define trigerPin 19              //Timer triger
+#define batt_pin 2                 //Battery analog pin
+#define trigerPin 18              //Timer triger
 
 char data[300];                   //JSON measurements data
 char data2[300];                  //JSON power parameterrs
@@ -45,7 +45,8 @@ DHT dht(DHTPIN, DHTTYPE);
 
 
 
-int analog_uv = 0;
+int analog_v = 0;             //Battery voltage
+int uv_index = 0;
 
 //BME280
 #define SEALEVELPRESSURE_HPA (1013.25)  //Sea level constant
@@ -58,7 +59,7 @@ float bme_a = 0;
 
 //Anemometer serial comm.
    
-#define RTS_pin    18    //RS485 Direction control
+#define RTS_pin    19    //RS485 Direction control
 #define RS485Transmit    HIGH
 #define RS485Receive     LOW
 float wind = 999;
@@ -295,6 +296,7 @@ void setup()
 
     pinMode(13, OUTPUT);
     digitalWrite(13, HIGH);
+    
 
     sensors.begin();        //DS18B20
     //dht.begin();            //DHT22
@@ -305,9 +307,11 @@ void setup()
     delay(1000);
 
   Serial.println("SHT31 test");
-  if (! sht31.begin(0x44)) {   // Set to 0x45 for alternate i2c addr
+  int q = 0;
+  while (! sht31.begin(0x44) && q<10) {   // Set to 0x45 for alternate i2c addr
     Serial.println("Couldn't find SHT31");
-    while (1) delay(1);
+    delay(1);
+    q++;
   }
 
   Serial.print("Heater Enabled State: ");
@@ -356,7 +360,7 @@ void loop()
   byte k = 0;
   byte n = 0;
 
-  while (k<2)
+  while (k<3)
   {
   digitalWrite(RTS_pin, RS485Transmit);
 
@@ -390,7 +394,7 @@ void loop()
      Serial.print(" ");
   }
   Serial.println();                  
-  delay(500);
+  delay(300);
   k=k+1;
   }
 
@@ -427,9 +431,11 @@ void loop()
     delay(100);
     vbus_c = axp.getVbusCurrent();
     delay(100);
-    //batt_v = axp.getBattVoltage();
+    //battery voltage
+    analog_v = analogRead(batt_pin);
+    batt_v = analog_v * 0.005927;
     // axp.getBattPercentage();   // axp192 is not support percentage
-    Serial.printf("VBUS:%.2f mV %.2f mA\n", vbus_v, vbus_c);
+    Serial.printf("VBUS:%.2f mV %.2f mA %.2f V\n", vbus_v, vbus_c, batt_v);
 //        if (axp.isChargeing()) {
 //            batt_charging_c = axp.getBattChargeCurrent();
 //            charging = true;
@@ -507,12 +513,7 @@ void loop()
   testdrawstyles(sensor_values,1); //Display
   delay(2000);
   
-  //UV sensor
-  analog_uv = 0;
-  Serial.print("UV sensor: ");
-  Serial.print(analog_uv);
-  Serial.print("mV");
-  Serial.println("\n");
+
   
   
   //BME280
@@ -578,7 +579,7 @@ void loop()
  String value2 = "\"sht30_h\": " + String(sht30_h)+",";
  String value3 = "\"DS18b20\": " + String(temperatureC)+",";
  String value4 = "\"wind\": " + String(wind)+",";
- String value5 = "\"analog_uv\": " + String(analog_uv)+",";
+ String value5 = "\"uv_index\": " + String(uv_index)+",";
  String value6 = "\"bme_t\": " + String(bme_t)+",";
  String value7 = "\"bme_h\": " + String(bme_h)+",";
  String value8 = "\"bme_p\": " + String(bme_p)+",";
@@ -613,6 +614,7 @@ void loop()
 
 
   digitalWrite(trigerPin, HIGH);
+  
   
 
   //Deep-sleep condition
