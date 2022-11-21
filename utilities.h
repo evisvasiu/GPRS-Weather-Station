@@ -1,6 +1,16 @@
 
 #include <Wire.h>
+extern String disp_txt;
+#define batt_pin 2                 //Battery analog pin
 
+//AXP192
+extern float vbus_v;
+extern float vbus_c;
+extern float batt_v;
+extern float batt_charging_c;
+extern float batt_discharg_c;
+extern bool charging;
+extern int analog_v;             //Battery voltage start value
 
 #if defined(SIM800L_IP5306_VERSION_20190610)
 
@@ -126,6 +136,17 @@ bool setupPMU()
         return false;
     }
 
+        //! AXP202 GPIO has no internal pull-up or pull-down.
+    //! For stability, external pull-up or pull-down resistors are required.
+    ret = axp.setGPIOMode(AXP_GPIO_0, AXP_IO_INPUT_MODE);
+    Serial.printf("AXP_GPIO_0 %d\n", ret);
+    ret = axp.setGPIOMode(AXP_GPIO_1, AXP_IO_INPUT_MODE);
+    Serial.printf("AXP_GPIO_1 %d\n", ret);
+    ret = axp.setGPIOMode(AXP_GPIO_2, AXP_IO_INPUT_MODE);
+    Serial.printf("AXP_GPIO_2 %d\n", ret);
+    ret = axp.setGPIOMode(AXP_GPIO_3, AXP_IO_INPUT_MODE);
+    Serial.printf("AXP_GPIO_3 %d\n", ret);
+
     //! Turn off unused power
     axp.setPowerOutPut(AXP192_DCDC1, AXP202_OFF);
     axp.setPowerOutPut(AXP192_LDO2, AXP202_OFF);
@@ -185,3 +206,37 @@ void setupModem()
     pinMode(LED_GPIO, OUTPUT);
     digitalWrite(LED_GPIO, LED_OFF);
 }
+
+void powerParametersLoop()
+{
+      //power module
+    vbus_v = axp.getVbusVoltage();
+    delay(100);
+    vbus_c = axp.getVbusCurrent();
+    delay(100);
+    //battery voltage
+    analog_v = analogRead(batt_pin);
+    batt_v = analog_v * 0.005927; //"0.005927" is voltage divider constant
+
+    Serial.printf("VBUS:%.2f mV %.2f mA %.2f V\n", vbus_v, vbus_c, batt_v);
+//        if (axp.isChargeing()) {
+//            batt_charging_c = axp.getBattChargeCurrent();
+//            charging = true;
+//            Serial.print("Charge:");
+//            Serial.print(batt_charging_c);
+//            Serial.println(" mA");
+//            batt_discharg_c = 0;
+//        } else {
+//            // Show current consumption
+//            batt_discharg_c = axp.getBattDischargeCurrent();
+//            charging = false;
+//            Serial.print("Discharge:");
+//            Serial.print(batt_discharg_c);
+//            Serial.println(" mA");
+//            batt_charging_c = 0;
+//        }
+
+    delay(100); 
+
+    disp_txt += "Board [mA] = " + String(vbus_c) + "\n";
+  }
