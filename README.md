@@ -1,6 +1,6 @@
 # lilygo_sim800l_weather-station
  
-Creating a remote weather station using the Lilygo SIM800l board
+A remote weather station using the Lilygo SIM800l board
 
 Sensors:
 
