@@ -17,7 +17,7 @@ DS18B20 - Temperature
 In order to be as more energy-efficient as possible, I have designed interval measurements by using an external cheap and effective timer (model C005). Another alternative was by using the board's deep-sleep functions but there was still current leakage from I2C ports. It would make the circuit more complex to deal with that issue. Board will power on periodically and will get command to power off from the board. This command can be given online as well, so it could stay powered on when required. 
 
 
-As data transmitting protocol is chosen MQTT. Data are published as JSON payload and then are extrancted in NodeRED. 
+MQTT is chosen as data transmitting protocol.. Data are published as JSON meesage payload. 
 
 
 
