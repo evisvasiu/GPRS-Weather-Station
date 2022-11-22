@@ -1,7 +1,6 @@
 #include <ArduinoJson.h>
 
-extern int uv_index;
-extern char data[300];                   //JSON measurements data
+extern char data1[300];                   //JSON measurements data
 extern char data2[300];                  //JSON power parameterrs
 
 void jsonPayload()
@@ -33,7 +32,7 @@ void jsonPayload()
   String payload1 = "{\"devices\": \"*\",\"measurements\": {" + measurements + "}}";
   String payload2 = "{\"devices\": \"*\",\"power\": {" + power + "}}";
   delay(10);
-  payload1.toCharArray(data, (payload1.length() + 1));
+  payload1.toCharArray(data1, (payload1.length() + 1));
   payload2.toCharArray(data2, (payload2.length() + 1));
   delay(20);
   }

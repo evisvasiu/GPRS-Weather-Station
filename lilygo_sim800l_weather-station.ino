@@ -9,23 +9,23 @@
  *  Battery valtage - 2
  */
 
-#define SIM800L_AXP192_VERSION_20200327
+#define SIM800L_AXP192_VERSION_20200327   //board - version definition
 #include "utilities.h"            //board power module
 #include "display.h"              //OLED display
 #include "anemometer.h"
-#include "communication.h"
+#include "communication.h"        //GPRS and MQTT
 #include "sht30.h"
 #include "bme280.h"
 #include "ds18b20.h"
+#include "uv.h"
 #include "json.h"
-
-String disp_txt = "";             //Text buffer to display
 
 #define trigerPin 18              //Timer triger pin
 
-char data[300];                   //JSON measurements data
-char data2[300];                  //JSON power parameterrs
+String disp_txt = "";             //Text buffer to display
 
+char data1[300];                  //JSON measurements data
+char data2[300];                  //JSON power parameterrs
 
 /*
 #include "DHT.h"
@@ -34,22 +34,9 @@ char data2[300];                  //JSON power parameterrs
 DHT dht(DHTPIN, DHTTYPE);
 */
 
-int uv_index = 0;             //Ultraviolet declaration
-
-int analog_v = 0;             //Battery voltage start value
-
-//AXP192
-float vbus_v;
-float vbus_c;
-float batt_v;
-float batt_charging_c;
-float batt_discharg_c;
-bool charging;
-
-
 void setup()
 {   
-  // Set console baud rate
+  //Console baud rate
   Serial.begin(115200);
   delay(10);
   displaySetup();
@@ -60,21 +47,15 @@ void setup()
   //dht.begin();                //DHT22
   bool status = bme.begin(0x76);   //bme I2C Address  
   anemometerSetup();
-
   sht30Setup();
-
-  
+  uvSetup(); 
 }
-
 
 void loop()
 {
   mqttReconnect();    //MQTT connection check
- 
-    //////////////////////////////////////////
-    //***** Harvesting sensor values***
-    /////////////////////////////////////////
-    
+
+      ///// ***** Harvesting sensor values***** ///// 
   powerParametersLoop();
   anemometerLoop();
   sht30Loop();
@@ -82,6 +63,7 @@ void loop()
   testdrawstyles(disp_txt,1); //Display
   delay(2000); 
   bme280Loop();
+  uvLoop();
   
  /*
     //Dht22
@@ -90,13 +72,11 @@ void loop()
     delay(100);
  */
  
-    //////////////////////////////////////////
-    // ***** Publishing to MQTT...*** ///////
-    /////////////////////////////////////////
+    ///// ***** Publishing to MQTT***** /////
 
   jsonPayload();
-  mqtt.publish("lilygo/json1", data);
-  delay(100);
+  mqtt.publish("lilygo/json1", data1);
+  delay(500);
   mqtt.publish("lilygo/json2", data2);
   delay(500);
   mqtt.loop();      //This will check the callback function to see if there is a message

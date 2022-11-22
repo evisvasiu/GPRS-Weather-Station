@@ -4,13 +4,13 @@ extern String disp_txt;
 #define batt_pin 2                 //Battery analog pin
 
 //AXP192
-extern float vbus_v;
-extern float vbus_c;
-extern float batt_v;
-extern float batt_charging_c;
-extern float batt_discharg_c;
-extern bool charging;
-extern int analog_v;             //Battery voltage start value
+float vbus_v;
+float vbus_c;
+float batt_v;
+float batt_charging_c;
+float batt_discharg_c;
+bool charging;
+int analog_v;             //Battery voltage start value
 
 #if defined(SIM800L_IP5306_VERSION_20190610)
 
