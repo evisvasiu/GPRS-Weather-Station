@@ -1,6 +1,7 @@
-# lilygo_sim800l_weather-station
+# Weather monitoring device
+
  
-A remote weather monitoring device using the Lilygo ESP32-SIM800L board
+A remote weather monitoring device using the "Lilygo ESP32-SIM800L" board
 
 Sensors used:
 
