@@ -216,7 +216,7 @@ void powerParametersLoop()
     delay(100);
     //battery voltage
     analog_v = analogRead(batt_pin);
-    batt_v = analog_v * 0.005927; //"0.005927" is voltage divider constant
+    batt_v = analog_v * 0.005927; //"0.005927" is voltage divider constant R1=10k, R2=2k
 
     Serial.printf("VBUS:%.2f mV %.2f mA %.2f V\n", vbus_v, vbus_c, batt_v);
 //        if (axp.isChargeing()) {
