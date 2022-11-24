@@ -11,6 +11,7 @@
  */
 
 #define SIM800L_AXP192_VERSION_20200327   //board - version definition
+#include <Adafruit_BME280.h>      
 #include "utilities.h"            //board power module
 #include "display.h"              //OLED display
 #include "anemometer.h"
@@ -64,7 +65,7 @@ void loop()
   testdrawstyles(disp_txt,1); //Display
   delay(2000); 
   bme280Loop();
-  uvLoop();
+  //uvLoop();
   
  /*
     //Dht22
@@ -74,7 +75,7 @@ void loop()
  */
  
     ///// ***** Publishing to MQTT***** /////
-
+  delay(2000);
   jsonPayload();
   mqtt.publish("lilygo/json1", data1);
   delay(500);
@@ -83,7 +84,7 @@ void loop()
   mqtt.loop();      //This will check the callback function to see if there is a message
   testdrawstyles(disp_txt,1);      //Display
   delay(1000);
-  jsonPayload();
+
 
   digitalWrite(trigerPin, HIGH);        //Triger to timer to power off the board
   

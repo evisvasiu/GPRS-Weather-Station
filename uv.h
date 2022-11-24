@@ -6,10 +6,11 @@ Adafruit_LTR390 ltr = Adafruit_LTR390();
 void uvSetup()
 {
     Serial.println("Adafruit LTR-390 test");
-
-  if ( ! ltr.begin() ) {
+  int s = 0;
+  while ( ! ltr.begin() && s < 10) {
     Serial.println("Couldn't find LTR sensor!");
-    while (1) delay(10);
+    delay(10);
+    s++;
   }
   Serial.println("Found LTR sensor!");
 

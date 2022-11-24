@@ -10,7 +10,7 @@ float bme_a = 0;
 
 void bme280Loop()
 {
-  float bme_t = bme.readTemperature();
+  bme_t = bme.readTemperature();
   if (! isnan(bme_t))  // check if 'is not a number'
     {
       Serial.print("BME Temperature: ");
@@ -22,7 +22,7 @@ void bme280Loop()
     bme_t = 999;
   }
   
-  float bme_h = bme.readHumidity();
+  bme_h = bme.readHumidity();
    if (! isnan(bme_h))  // check if 'is not a number'
     {
       Serial.print("BME Humidity: ");
@@ -34,7 +34,7 @@ void bme280Loop()
     bme_h = 999;
   }
   
-  float bme_p = bme.readPressure() / 100.0;
+  bme_p = bme.readPressure() / 100.0;
    if (! isnan(bme_p))  // check if 'is not a number'
     {
       Serial.print("BME Pressure: ");
@@ -46,7 +46,7 @@ void bme280Loop()
     bme_p = 0;
   }
   
-  float bme_a = bme.readAltitude(SEALEVELPRESSURE_HPA);
+  bme_a = bme.readAltitude(SEALEVELPRESSURE_HPA);
    if (! isnan(bme_a))  // check if 'is not a number'
     {
       Serial.print("Altitude: ");
