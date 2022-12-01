@@ -22,6 +22,9 @@
 #include "uv.h"
 #include "json.h"
 
+String keep_on = "false";
+bool keep_on_command = false;
+
 #define trigerPin 18              //Timer triger pin
 
 String disp_txt = "";             //Text buffer to display
@@ -35,9 +38,10 @@ char data2[300];                  //JSON power parameterrs
 #define DHTTYPE DHT22
 DHT dht(DHTPIN, DHTTYPE);
 */
-
+int perserit = 0;
 void setup()
-{   
+{  
+  
   //Console baud rate
   Serial.begin(115200);
   delay(10);
@@ -55,6 +59,8 @@ void setup()
 
 void loop()
 {
+  
+  
   mqttReconnect();    //MQTT connection check
 
       ///// ***** Harvesting sensor values***** ///// 
@@ -85,7 +91,20 @@ void loop()
   testdrawstyles(disp_txt,1);      //Display
   delay(1000);
 
+  if (keep_on_command == true)
+  {
+    if (keep_on == "false")
+    {
+      digitalWrite(trigerPin, HIGH);        //Triger to timer to power off the board
+      }
+    }
+  else
+  {
+    if (perserit > 3)
+    {
+      digitalWrite(trigerPin, HIGH);        //Triger to timer to power off the board
+      }
+    }
 
-  digitalWrite(trigerPin, HIGH);        //Triger to timer to power off the board
-  
+  perserit++;
 }

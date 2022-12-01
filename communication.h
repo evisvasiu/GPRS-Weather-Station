@@ -3,6 +3,10 @@
 //Serial1 is used for the modem communication
 //Serial2 is used for the RS485 module
 
+//bool keep_on_command = false;
+extern String keep_on;
+extern bool keep_on_command;
+
 extern String disp_txt;
 
 // Select your modem:
@@ -56,14 +60,14 @@ void mqttCallback(char *topic, byte *payload, unsigned int length) {
         message = message + (char) payload[i];  // convert *byte to string
       }
     Serial.println(message);
-    /*
-    // Only proceed if incoming message's topic matches
-    if (String(topic) == "lilygo/deep_sleep") {
-        sleep_command = true;
-        deep_sleep = message;
-        mqtt.publish("lilygo/deep_sleep_status", String(deep_sleep).c_str());
-    }
     
+    // Only proceed if incoming message's topic matches
+    if (String(topic) == "lilygo/keep_on") {
+        keep_on_command = true;
+        keep_on = message;
+        mqtt.publish("lilygo/keep_on_status", String(keep_on).c_str());
+    }
+    /*
      if (String(topic) == "lilygo/deep_sleep_duration") {
      sleep_time_sec = message;
      mqtt.publish("lilygo/sleep_time_feedback", String(sleep_time_sec).c_str());
@@ -92,8 +96,7 @@ boolean mqttConnect()
     testdrawstyles(disp_txt,1);
     lastReconnectAttempt = 0;
     mqtt.publish(topicInit, "Started");
-    mqtt.subscribe("lilygo/deep_sleep",1);
-    mqtt.subscribe("lilygo/deep_sleep_duration",1);
+    mqtt.subscribe("lilygo/keep_on",1);
     return mqtt.connected();
 }
 
@@ -184,5 +187,6 @@ void communicationSetup()
 
     pinMode(13, OUTPUT);
     digitalWrite(13, HIGH);
+
     
   }
