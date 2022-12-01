@@ -20,7 +20,7 @@ In order to be as more energy-efficient as possible, I have designed interval me
 
 MQTT is chosen as data transmitting protocol.. Data are published as JSON meesage payload. 
 
-##Power circuit:
+## Power circuit:
 
 ![Power circuit](schematic.png)
 
