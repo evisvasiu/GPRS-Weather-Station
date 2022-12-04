@@ -98,7 +98,7 @@ void loop()
       digitalWrite(trigerPin, HIGH);        //Triger to timer to power off the board
       }
     }
-  else
+  else    //this will loop 4 times and if there is not commising message it will give command to turn off. 
   {
     if (perserit > 3)
     {
