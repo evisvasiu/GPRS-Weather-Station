@@ -51,7 +51,7 @@ void setup()
   communicationSetup();         //GPRS and MQTT initialization
   sensors.begin();              //DS18B20
   //dht.begin();                //DHT22
-  bool status = bme.begin(0x76);   //bme I2C Address  
+  bmeSetup();
   anemometerSetup();
   sht30Setup();
   uvSetup(); 
@@ -70,7 +70,7 @@ void loop()
   ds18b20Loop();
   testdrawstyles(disp_txt,1); //Display
   delay(2000); 
-  bme280Loop();
+  bme280Loop(&Serial);
   //uvLoop();
   
  /*
