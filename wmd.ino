@@ -40,13 +40,13 @@ DHT dht(DHTPIN, DHTTYPE);
 */
 int perserit = 0;
 void setup()
-{  
-  
+{   
+  pinMode(trigerPin, OUTPUT);   //Triger for the timer
+  digitalWrite(trigerPin, LOW);
   //Console baud rate
   Serial.begin(115200);
   delay(10);
   displaySetup();
-  pinMode(trigerPin, OUTPUT);   //Triger for the timer
   setupModem();                 //setup in power module utilities.h
   communicationSetup();         //GPRS and MQTT initialization
   sensors.begin();              //DS18B20
