@@ -128,7 +128,7 @@ void communicationSetup()
     // Set GSM module baud rate and UART pins
     Serial1.begin(57600, SERIAL_8N1, MODEM_RX, MODEM_TX);
 
-    delay(6000);
+    delay(100);
 
     // Restart takes quite some time
     // To skip it, call init() instead of restart()

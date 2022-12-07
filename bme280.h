@@ -12,11 +12,13 @@ float bme_a = 0;
 void bmeSetup()
 {
     Wire.begin();
-
-  while(!bme.begin())
+  int k=0;
+  while(!bme.begin() && k < 5)
   {
     Serial.println("Could not find BME280 sensor!");
-    delay(1000);
+    delay(100);
+    k++;
+
   }
 
   switch(bme.chipModel())

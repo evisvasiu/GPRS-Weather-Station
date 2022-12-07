@@ -13,7 +13,7 @@ void anemometerSetup()
 {
     pinMode(RTS_pin, OUTPUT);   //Anemometer direction control pin
     Serial2.begin(4800, SERIAL_8N1, 14, 25);  //RX12  TX14
-    delay(1000);
+    delay(100);
   }
 
 void anemometerLoop()
