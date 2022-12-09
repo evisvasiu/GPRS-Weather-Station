@@ -215,14 +215,15 @@ void powerParametersLoop()
     vbus_c = axp.getVbusCurrent();
     delay(10);
     //battery voltage
-    int sum = 0;
+    float sum = 0;
+    Serial.println(analogRead(batt_pin));
     for (int i = 1; i<11; i++) {
       sum += analogRead(batt_pin);
       analog_avg = sum/i;
       delay(50);
     }
 
-    batt_v = analog_avg * 0.005927; //"0.005927" is voltage divider constant R1=10k, R2=2k
+    batt_v = analog_avg * (3.3/4095)*((2000+10000)/2000)+0.71;
     Serial.print("Battery V");
     Serial.println(batt_v);
 
