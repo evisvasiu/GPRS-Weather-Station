@@ -10,7 +10,7 @@ float batt_v;
 float batt_charging_c;
 float batt_discharg_c;
 bool charging;
-int analog_v;             //Battery voltage start value
+int analog_avg;
 
 #if defined(SIM800L_IP5306_VERSION_20190610)
 
@@ -211,14 +211,22 @@ void powerParametersLoop()
 {
       //power module
     vbus_v = axp.getVbusVoltage();
-    delay(100);
+    delay(10);
     vbus_c = axp.getVbusCurrent();
-    delay(100);
+    delay(10);
     //battery voltage
-    analog_v = analogRead(batt_pin);
-    batt_v = analog_v * 0.005927; //"0.005927" is voltage divider constant R1=10k, R2=2k
+    int sum = 0;
+    for (int i = 1; i<11; i++) {
+      sum += analogRead(batt_pin);
+      analog_avg = sum/i;
+      delay(50);
+    }
 
-    Serial.printf("VBUS:%.2f mV %.2f mA %.2f V\n", vbus_v, vbus_c, batt_v);
+    batt_v = analog_avg * 0.005927; //"0.005927" is voltage divider constant R1=10k, R2=2k
+    Serial.print("Battery V");
+    Serial.println(batt_v);
+
+    Serial.printf("VBUS:%.2f mV %.2f mA", vbus_v, vbus_c);
 //        if (axp.isChargeing()) {
 //            batt_charging_c = axp.getBattChargeCurrent();
 //            charging = true;
@@ -235,8 +243,6 @@ void powerParametersLoop()
 //            Serial.println(" mA");
 //            batt_charging_c = 0;
 //        }
-
-    delay(100); 
 
     disp_txt += "Board [mA] = " + String(vbus_c) + "\n";
   }
