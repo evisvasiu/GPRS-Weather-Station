@@ -8,6 +8,7 @@ extern String keep_on;
 extern bool keep_on_command;
 
 extern String disp_txt;
+#define trigerPin 18
 
 // Select your modem:
 #define TINY_GSM_MODEM_SIM800
@@ -90,6 +91,11 @@ boolean mqttConnect()
     if (status == false) {
         Serial.println(" fail");
         return false;
+        Serial.print("Board will turn off in 5 seconds");
+        delay(5000);
+        digitalWrite(trigerPin, HIGH);    //turning of the board
+
+
     }
     Serial.println(" success");
     disp_txt += "successfully connected\n";
@@ -102,6 +108,7 @@ boolean mqttConnect()
 
 void mqttReconnect()
 {
+    int s=0;
       //checking connection to MQTT
     while (!mqtt.connected()) {
         Serial.println("Reconnecting to MQTT");
@@ -116,6 +123,13 @@ void mqttReconnect()
             }
         }
         delay(100);
+        s++;
+        if (s>50){
+          Serial.print("Can not connect to MQTT. Board will turn off in 5 seconds.");
+          delay(5000);
+          digitalWrite(trigerPin, HIGH);    //turning of the board
+        }
+
     }
   }
 
@@ -155,8 +169,15 @@ void communicationSetup()
     Serial.print("Waiting for network...");
     disp_txt = "Waiting for network..\n";
     testdrawstyles(disp_txt,1);
+    int q = 0;  //used to count "network connection failed tentatives"
     while (!modem.waitForNetwork()) {
       Serial.print(".");
+      q++;
+      if (q>1){
+        Serial.print("No network signal. Board will turn off in 5 seconds");
+        delay(5000);
+        digitalWrite(trigerPin, HIGH);    //turning of the board
+      }
       }
       Serial.println(" success");
 

@@ -37,9 +37,8 @@ void anemometerLoop()
   Serial2.write(fs_request, sizeof(fs_request));
   Serial2.flush();
   byte fs_buf[8];
-  delay(20);
   Serial2.readBytes(fs_buf, 8);
-
+  delay(200);
   if (fs_buf[0] == 1 && fs_buf[1] == 3 && fs_buf[2] == 2)         //filtering correct values
     {
      j++;
