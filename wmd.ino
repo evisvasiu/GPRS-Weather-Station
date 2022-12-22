@@ -72,7 +72,7 @@ void loop()
   testdrawstyles(disp_txt,1); //Display
   delay(2000); 
   bme280Loop(&Serial);
-  //uvLoop();
+  uvLoop();
   
  /*
     //Dht22

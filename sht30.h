@@ -17,7 +17,7 @@ void sht30Setup()
   int q = 0;
   while (! sht31.begin(0x44) && q<10) {   // Set to 0x45 for alternate i2c addr
     Serial.println("Couldn't find SHT31");
-    delay(1);
+    delay(100);
     q++;
   }
 

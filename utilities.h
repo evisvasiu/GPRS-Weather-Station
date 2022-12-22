@@ -216,7 +216,7 @@ void powerParametersLoop()
     delay(10);
     //battery voltage
     float sum = 0;
-    Serial.println(analogRead(batt_pin));
+ 
     for (int i = 1; i<11; i++) {
       sum += analogRead(batt_pin);
       analog_avg = sum/i;

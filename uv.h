@@ -1,5 +1,5 @@
 #include "Adafruit_LTR390.h"
-int uv_index = 0;
+int uv_index = 999;
 
 Adafruit_LTR390 ltr = Adafruit_LTR390();
 
@@ -49,7 +49,8 @@ void uvSetup()
  void uvLoop()
  {  if (ltr.newDataAvailable()) {
       Serial.print("UV data: "); 
-      Serial.print(ltr.readUVS());
       uv_index =  ltr.readUVS();
-  }
+      Serial.println(String(uv_index));
+      
+ }
  }

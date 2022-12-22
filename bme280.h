@@ -2,12 +2,14 @@
 #include <Wire.h>     
 extern String disp_txt;
 
+
 #define SEALEVELPRESSURE_HPA (1013.25)  //Sea level constant
 BME280I2C bme;
 float bme_t = 999;
 float bme_p = 0;
 float bme_h = 999;
 float bme_a = 0;
+bool bme_found = true;
 
 void bmeSetup()
 {
@@ -31,11 +33,14 @@ void bmeSetup()
        break;
      default:
        Serial.println("Found UNKNOWN sensor! Error!");
+       bme_found = false;
   }
 }
 
 void bme280Loop(Stream* client)
 {
+   if (bme_found == true) {
+  
    float temp(NAN), hum(NAN), pres(NAN);
 
    BME280::TempUnit tempUnit(BME280::TempUnit_Celsius);
@@ -59,4 +64,5 @@ void bme280Loop(Stream* client)
    bme_a = 44330 * (1 - pow(bme_p/SEALEVELPRESSURE_HPA, 1/5.255)); //short altitude(pressure) formula
 
    delay(1000);
+   }
 }
