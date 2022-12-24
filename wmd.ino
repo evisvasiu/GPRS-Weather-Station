@@ -25,7 +25,7 @@
 String keep_on = "false";
 bool keep_on_command = false;
 
-#define trigerPin 18              //Timer triger pin
+#define trigerPin 19              //Timer triger pin
 
 String disp_txt = "";             //Text buffer to display
 

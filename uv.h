@@ -15,6 +15,7 @@ void uvSetup()
   Serial.println("Found LTR sensor!");
 
   ltr.setMode(LTR390_MODE_UVS);
+  delay(100);
   if (ltr.getMode() == LTR390_MODE_ALS) {
     Serial.println("In ALS mode");
   } else {
@@ -50,7 +51,9 @@ void uvSetup()
  {  if (ltr.newDataAvailable()) {
       Serial.print("UV data: "); 
       uv_index =  ltr.readUVS();
-      Serial.println(String(uv_index));
-      
+      Serial.println(String(uv_index));     
+ }
+ else {
+   uv_index =  56;
  }
  }

@@ -1,7 +1,7 @@
 
 #include <Wire.h>
 extern String disp_txt;
-#define batt_pin 2                 //Battery analog pin
+#define batt_pin 15                 //Battery analog pin
 
 //AXP192
 float vbus_v;
