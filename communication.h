@@ -1,4 +1,4 @@
-
+#include "credentials.h"    
 //Serial is used for serial monitoring
 //Serial1 is used for the modem communication
 //Serial2 is used for the RS485 module
@@ -26,15 +26,9 @@ extern String disp_txt;
 // set GSM PIN, if any
 #define GSM_PIN ""
 
-// Your GPRS credentials, if any
-const char apn[] = "vodafoneweb";
-const char gprsUser[] = "";
-const char gprsPass[] = "";
 
-// MQTT details
-const char *broker = "138.3.246.220";
 
-const char *topicInit = "GsmClientTest/init";
+
 
 
 #include <TinyGsmClient.h>
@@ -53,28 +47,18 @@ PubSubClient mqtt(client);
 int lastReconnectAttempt = 0;
 
 void mqttCallback(char *topic, byte *payload, unsigned int length) {
-    Serial.print("Message arrived in topic: ");
-    Serial.println(topic);
-    Serial.print("Message:");
-    String message;
-    for (int i = 0; i < length; i++) {
-        message = message + (char) payload[i];  // convert *byte to string
-      }
+  Serial.print("Message arrived in topic: ");
+  Serial.println(topic);
+  Serial.print("Message:");
+  String message;
+
+  for (int i = 0; i < length; i++) {
+      message = message + (char)payload[i];  // convert *byte to string
+    }
+
     Serial.println(message);
-    
-    // Only proceed if incoming message's topic matches
-    if (String(topic) == "lilygo/keep_on") {
-        keep_on_command = true;
         keep_on = message;
-        mqtt.publish("lilygo/keep_on_status", String(keep_on).c_str());
     }
-    /*
-     if (String(topic) == "lilygo/deep_sleep_duration") {
-     sleep_time_sec = message;
-     mqtt.publish("lilygo/sleep_time_feedback", String(sleep_time_sec).c_str());
-    }
-    */
-}
 
 boolean mqttConnect()
 {
@@ -86,7 +70,7 @@ boolean mqttConnect()
     // Connect to MQTT Broker
 
     // Or, if you want to authenticate MQTT:
-    boolean status = mqtt.connect("GsmClientName", "jezerca", "Password@2");
+    boolean status = mqtt.connect("GsmClientName", mqtt_user, mqtt_pass);
 
     if (status == false) {
         Serial.println(" fail");
@@ -190,8 +174,15 @@ void communicationSetup()
     // GPRS connection parameters are usually set after network registration
     Serial.print(F("Connecting to "));
     Serial.print(apn);
+    q=0;
     while (!modem.gprsConnect(apn, gprsUser, gprsPass)) {
       Serial.print(".");
+      q++;
+      if (q>5){
+        Serial.print("No APN. Board will turn off in 5 seconds");
+        delay(5000);
+        digitalWrite(trigerPin, HIGH);    //turning of the board
+      }
       }
       Serial.println(" success");
 
@@ -208,6 +199,4 @@ void communicationSetup()
 
     pinMode(13, OUTPUT);
     digitalWrite(13, HIGH);
-
-    
   }

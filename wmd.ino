@@ -29,8 +29,6 @@ bool keep_on_command = false;
 
 String disp_txt = "";             //Text buffer to display
 
-char data1[300];                  //JSON measurements data
-char data2[300];                  //JSON power parameterrs
 
 /*
 #include "DHT.h"
@@ -73,20 +71,11 @@ void loop()
   delay(2000); 
   bme280Loop(&Serial);
   uvLoop();
-  
- /*
-    //Dht22
-    float dht_h = dht.readHumidity();
-    float dht_t = dht.readTemperature();
-    delay(100);
- */
  
     ///// ***** Publishing to MQTT***** /////
   delay(2000);
   jsonPayload();
-  mqtt.publish("lilygo/json1", data1);
-  delay(500);
-  mqtt.publish("lilygo/json2", data2);
+  mqtt.publish("lilygo/json", msg_out);
   delay(500);
   mqtt.loop();      //This will check the callback function to see if there is a message
   testdrawstyles(disp_txt,1);      //Display
