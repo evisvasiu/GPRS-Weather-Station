@@ -54,6 +54,8 @@ void uvSetup()
       Serial.println(String(uv_index));     
  }
  else {
-   uv_index =  56;
+   uv_index =  999;
+   Serial.print("UV data: ");
+   Serial.println(String(uv_index));
  }
  }

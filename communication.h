@@ -3,9 +3,7 @@
 //Serial1 is used for the modem communication
 //Serial2 is used for the RS485 module
 
-//bool keep_on_command = false;
-extern String keep_on;
-extern bool keep_on_command;
+extern String remote_keep_on_ctrl;
 
 extern String disp_txt;
 #define trigerPin 18
@@ -46,30 +44,28 @@ PubSubClient mqtt(client);
 
 int lastReconnectAttempt = 0;
 
-void mqttCallback(char *topic, byte *payload, unsigned int length) {
-  Serial.print("Message arrived in topic: ");
-  Serial.println(topic);
-  Serial.print("Message:");
-  String message;
-
+void callback(char* topic, byte* message, unsigned int length) {
+  Serial.print("Message arrived on topic: ");
+  Serial.print(topic);
+  Serial.print(". Message: ");
+  String messageTemp;
+  
   for (int i = 0; i < length; i++) {
-      message = message + (char)payload[i];  // convert *byte to string
-    }
+    Serial.print((char)message[i]);
+    messageTemp += (char)message[i];
+  }
+    
+  if (topic == "lilygo/keep_on"){
+    remote_keep_on_ctrl = messageTemp;
+  }
+}
 
-    Serial.println(message);
-        keep_on = message;
-    }
-
-boolean mqttConnect()
-{
+boolean mqttConnect(){
     Serial.print("Connecting to ");
     Serial.print(broker);
     disp_txt = "Connecting to \n" + String(broker) + "...\n";
     testdrawstyles(disp_txt, 1);
 
-    // Connect to MQTT Broker
-
-    // Or, if you want to authenticate MQTT:
     boolean status = mqtt.connect("GsmClientName", mqtt_user, mqtt_pass);
 
     if (status == false) {
@@ -194,7 +190,7 @@ void communicationSetup()
 
     // MQTT Broker setup
     mqtt.setServer(broker, 1883);
-    mqtt.setCallback(mqttCallback);
+    mqtt.setCallback(callback);
     mqttConnect();
 
     pinMode(13, OUTPUT);

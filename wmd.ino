@@ -22,8 +22,8 @@
 #include "uv.h"
 #include "json.h"
 
-String keep_on = "false";
-bool keep_on_command = false;
+String remote_keep_on_ctrl = "false";
+bool activate_remote_keep_on = false;
 
 #define trigerPin 19              //Timer triger pin
 
@@ -36,65 +36,57 @@ String disp_txt = "";             //Text buffer to display
 #define DHTTYPE DHT22
 DHT dht(DHTPIN, DHTTYPE);
 */
-int perserit = 0;
-void setup()
-{   
-  setupModem();
-  pinMode(trigerPin, OUTPUT);   //Triger for the timer
-  digitalWrite(trigerPin, LOW);
-  //Console baud rate
-  Serial.begin(115200);
-  delay(10);
-  displaySetup();
 
-  communicationSetup();         //GPRS and MQTT initialization
+int perserit = 0;
+void setup() {  
+
+  displaySetup();
+  pinMode(trigerPin, OUTPUT);   //Triger for the timer 
+  //Console baud rate 
+  Serial.begin(115200);
+
+  setupModem();
+  //GPRS and MQTT initialization
+  communicationSetup();
+
   sensors.begin();              //DS18B20
-  //dht.begin();                //DHT22
   bmeSetup();
   anemometerSetup();
   sht30Setup();
   uvSetup(); 
 }
 
-void loop()
-{
-  
-  
-  mqttReconnect();    //MQTT connection check
+void loop(){
 
-      ///// ***** Harvesting sensor values***** ///// 
+  mqttReconnect(); //MQTT connection check
+
+  ///// ***** Harvesting sensor values***** ///// 
   powerParametersLoop();
   anemometerLoop();
   sht30Loop();
   ds18b20Loop();
   testdrawstyles(disp_txt,1); //Display
-  delay(2000); 
   bme280Loop(&Serial);
   uvLoop();
  
     ///// ***** Publishing to MQTT***** /////
-  delay(2000);
   jsonPayload();
   mqtt.publish("lilygo/json", msg_out);
   delay(500);
-  mqtt.loop();      //This will check the callback function to see if there is a message
+  mqtt.loop();   //This will check the callback function to see if there is a message
   testdrawstyles(disp_txt,1);      //Display
-  delay(1000);
 
-  if (keep_on_command == true)
-  {
-    if (keep_on == "false")
-    {
-      digitalWrite(trigerPin, HIGH);        //Triger to timer to power off the board
-      }
+  if (activate_remote_keep_on == true){
+    if (remote_keep_on_ctrl == "false"){
+      digitalWrite(trigerPin, HIGH);        
     }
-  else    //this will loop 4 times and if there is not commising message it will give command to turn off. 
-  {
-    if (perserit > 3)
-    {
-      digitalWrite(trigerPin, HIGH);        //Triger to timer to power off the board
-      }
+  }
+  
+  else{    //this will loop 4 times and if there is not commising message it will give command to turn off. 
+    if (perserit > 3){
+      digitalWrite(trigerPin, HIGH);    
     }
+  }
 
   perserit++;
 }
