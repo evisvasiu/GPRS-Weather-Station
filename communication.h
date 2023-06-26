@@ -115,13 +115,12 @@ void mqttReconnect()
 
 void communicationSetup()
 {
-      Serial.println("Wait...");
+    Serial.println("Wait...");
     disp_txt += "Wait... \n";
     testdrawstyles(disp_txt,1);
 
     // Set GSM module baud rate and UART pins
     Serial1.begin(57600, SERIAL_8N1, MODEM_RX, MODEM_TX);
-
     delay(100);
 
     // Restart takes quite some time
@@ -129,9 +128,9 @@ void communicationSetup()
     Serial.println("Initializing modem...");
     disp_txt += "Initializing modem...\n";
     testdrawstyles(disp_txt,1);
+    
     //modem.restart();
     modem.init();
-
     String modemInfo = modem.getModemInfo();
     Serial.print("Modem Info: ");
     Serial.println(modemInfo);
@@ -145,7 +144,6 @@ void communicationSetup()
         modem.simUnlock(GSM_PIN);
     }
 #endif
-
     Serial.print("Waiting for network...");
     disp_txt = "Waiting for network..\n";
     testdrawstyles(disp_txt,1);

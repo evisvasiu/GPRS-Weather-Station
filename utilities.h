@@ -212,22 +212,23 @@ void powerParametersLoop()
       //power module
     vbus_v = axp.getVbusVoltage();
     delay(10);
-    vbus_c = axp.getVbusCurrent();
-    delay(10);
+    //vbus_c = axp.getVbusCurrent();
+    //delay(10);
+
     //battery voltage
     float sum = 0;
- 
-    for (int i = 1; i<11; i++) {
+    int max_reads = 11;
+    for (int i = 1; i<max_reads; i++) {
       sum += analogRead(batt_pin);
-      analog_avg = sum/i;
-      delay(50);
+      delay(10);
     }
+    analog_avg = sum/max_reads;
 
     batt_v = analog_avg * (3.3/4095)*((2000+10000)/2000)+0.71;
-    Serial.print("Battery V");
+    Serial.print("Battery V ");
     Serial.println(batt_v);
 
-    Serial.printf("VBUS:%.2f mV %.2f mA", vbus_v, vbus_c);
+    //Serial.printf("VBUS:%.2f mV %.2f mA", vbus_v, vbus_c);
 //        if (axp.isChargeing()) {
 //            batt_charging_c = axp.getBattChargeCurrent();
 //            charging = true;

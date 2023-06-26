@@ -1,40 +1,46 @@
-#include "Adafruit_LTR390.h"
+#include <Wire.h>
+#include <LTR390.h>
+
+#define I2C_ADDRESS 0x53
 int uv_index = 999;
 
-Adafruit_LTR390 ltr = Adafruit_LTR390();
+/* There are several ways to create your LTR390 object:
+ * LTR390 ltr390 = LTR390()                    -> uses Wire / I2C Address = 0x53
+ * LTR390 ltr390 = LTR390(OTHER_ADDR)          -> uses Wire / I2C_ADDRESS
+ * LTR390 ltr390 = LTR390(&wire2)              -> uses the TwoWire object wire2 / I2C_ADDRESS
+ * LTR390 ltr390 = LTR390(&wire2, I2C_ADDRESS) -> all together
+ * Successfully tested with two I2C busses on an ESP32
+ */
+LTR390 ltr390(I2C_ADDRESS);
 
 void uvSetup()
 {
-    Serial.println("Adafruit LTR-390 test");
-  int s = 0;
-  while ( ! ltr.begin() && s < 10) {
-    Serial.println("Couldn't find LTR sensor!");
-    delay(10);
-    s++;
-  }
-  Serial.println("Found LTR sensor!");
+  Wire.begin();
 
-  ltr.setMode(LTR390_MODE_UVS);
-  delay(100);
-  if (ltr.getMode() == LTR390_MODE_ALS) {
-    Serial.println("In ALS mode");
-  } else {
-    Serial.println("In UVS mode");
+  long delay = millis();
+  bool break_loop = false;
+  while(!ltr390.init() && !break_loop){
+    if(millis() > delay + 2000){
+      break_loop = true;
+      Serial.println("LTR390 not connected!");
+    }
   }
 
-  ltr.setGain(LTR390_GAIN_3);
+  ltr390.setMode(LTR390_MODE_UVS);
+
+  ltr390.setGain(LTR390_GAIN_18);
   Serial.print("Gain : ");
-  switch (ltr.getGain()) {
+  switch (ltr390.getGain()) {
     case LTR390_GAIN_1: Serial.println(1); break;
     case LTR390_GAIN_3: Serial.println(3); break;
     case LTR390_GAIN_6: Serial.println(6); break;
     case LTR390_GAIN_9: Serial.println(9); break;
     case LTR390_GAIN_18: Serial.println(18); break;
   }
-
-  ltr.setResolution(LTR390_RESOLUTION_16BIT);
+  
+  ltr390.setResolution(LTR390_RESOLUTION_20BIT);
   Serial.print("Resolution : ");
-  switch (ltr.getResolution()) {
+  switch (ltr390.getResolution()) {
     case LTR390_RESOLUTION_13BIT: Serial.println(13); break;
     case LTR390_RESOLUTION_16BIT: Serial.println(16); break;
     case LTR390_RESOLUTION_17BIT: Serial.println(17); break;
@@ -43,19 +49,19 @@ void uvSetup()
     case LTR390_RESOLUTION_20BIT: Serial.println(20); break;
   }
 
-  ltr.setThresholds(100, 1000);
-  ltr.configInterrupt(true, LTR390_MODE_UVS);
+  //ltr390.setThresholds(100, 1000);
+  //ltr390.configInterrupt(true, LTR390_MODE_UVS);
   }
 
- void uvLoop()
- {  if (ltr.newDataAvailable()) {
-      Serial.print("UV data: "); 
-      uv_index =  ltr.readUVS();
-      Serial.println(String(uv_index));     
- }
- else {
+ void uvLoop(){  
+
+  if (ltr390.newDataAvailable()) {
+    uv_index =  ltr390.getUVI();
+  }
+  else {
    uv_index =  999;
-   Serial.print("UV data: ");
-   Serial.println(String(uv_index));
- }
- }
+  }
+
+  Serial.print("UV data: ");
+  Serial.println(String(uv_index));
+}

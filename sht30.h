@@ -1,5 +1,4 @@
 #include <Arduino.h>
-#include <Wire.h>
 #include "Adafruit_SHT31.h"
 
 extern String disp_txt;
@@ -11,14 +10,16 @@ Adafruit_SHT31 sht31 = Adafruit_SHT31();
 float sht30_t = 999;
 float sht30_h = 999;
 
-void sht30Setup()
-{
-    Serial.println("SHT31 test");
-  int q = 0;
-  while (! sht31.begin(0x44) && q<10) {   // Set to 0x45 for alternate i2c addr
-    Serial.println("Couldn't find SHT31");
-    delay(100);
-    q++;
+void sht30Setup(){
+
+  Serial.println("Loading SHT30");
+  long delay = millis();
+  bool break_loop = false;
+  while (!sht31.begin(0x44) && !break_loop){   // Set to 0x45 for alternate i2c addr
+    if(millis() > delay + 2000){
+      break_loop = true;
+      Serial.println("Couldn't find SHT31");
+    }
   }
 
   Serial.print("Heater Enabled State: ");
@@ -28,17 +29,16 @@ void sht30Setup()
     Serial.println("DISABLED");
   }
 
-void sht30Loop()
-{
-      //SHT30
-    sht30_t = sht31.readTemperature();
-    sht30_h = sht31.readHumidity();
+void sht30Loop(){
 
-    if (! isnan(sht30_t)) {  // check if 'is not a number'
-     Serial.print("SHT30 Temp *C = "); Serial.print(sht30_t); Serial.print("\t\t");
-     disp_txt += "SHT30 [*C] = " + String(sht30_t) + "\n";
-     testdrawstyles(disp_txt, 1);
-    } else { 
+  sht30_t = sht31.readTemperature();
+  sht30_h = sht31.readHumidity();
+
+  if (! isnan(sht30_t)) {  // check if 'is not a number'
+    Serial.print("SHT30 Temp *C = "); Serial.print(sht30_t); Serial.print("\t\t");
+    disp_txt += "SHT30 [*C] = " + String(sht30_t) + "\n";
+    testdrawstyles(disp_txt, 1);
+  } else { 
       Serial.println("Failed to read SHT30 temperature");
       disp_txt += "SHT30 disconnected\n";  
       sht30_t = 999;
@@ -47,7 +47,9 @@ void sht30Loop()
     if (! isnan(sht30_h)) {  // check if 'is not a number'
       Serial.print("Hum. % = "); Serial.println(sht30_h);
       disp_txt += "SHT30 [%] = " + String(sht30_h) + "\n";
-    } else { 
+    }
+
+    else{ 
       Serial.println("Failed to read humidity");
       sht30_h = 999;
     }

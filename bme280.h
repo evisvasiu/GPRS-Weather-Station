@@ -13,16 +13,16 @@ bool bme_found = true;
 
 void bmeSetup()
 {
-    Wire.begin();
-  int k=0;
-  while(!bme.begin() && k < 5)
-  {
-    Serial.println("Could not find BME280 sensor!");
-    delay(100);
-    k++;
-
+  Serial.println("Loading BME280");
+  Wire.begin();
+  long delay = millis();
+  bool break_loop = false;
+  while(!bme.begin() && !break_loop){
+    if (millis() > delay + 2000){
+      break_loop = true;
+      Serial.println("Could not find BME280 sensor!");
+    } 
   }
-
   switch(bme.chipModel())
   {
      case BME280::ChipModel_BME280:
