@@ -6,7 +6,7 @@
  *  UV - I2C
  *  LED diplay - I2C
  *  Timer triger - 18
- *  Anemometer - RTS 19, RX TX 14 25
+ *  Anemometer -  RX TX 14 25
  *  Battery valtage - 2
  */
 
@@ -25,7 +25,7 @@
 String remote_keep_on_ctrl = "false";
 bool activate_remote_keep_on = false;
 
-#define trigerPin 19              //Timer triger pin
+#define trigerPin 18              //Timer triger pin
 
 String disp_txt = "";             //Text buffer to display
 
@@ -37,11 +37,13 @@ String disp_txt = "";             //Text buffer to display
 DHT dht(DHTPIN, DHTTYPE);
 */
 
+
+
 int perserit = 0;
 void setup() {  
 
   displaySetup();
-  pinMode(trigerPin, OUTPUT);   //Triger for the timer 
+  pinMode(trigerPin, INPUT_PULLDOWN);   //Triger for the timer 
   //Console baud rate 
   Serial.begin(115200);
 
@@ -61,7 +63,8 @@ void loop(){
   mqttReconnect(); //MQTT connection check
 
   ///// ***** Harvesting sensor values***** ///// 
-  powerParametersLoop();
+  //powerParametersLoop();
+  anemometerSetup();
   anemometerLoop();
   sht30Loop();
   ds18b20Loop();
@@ -78,12 +81,14 @@ void loop(){
 
   if (activate_remote_keep_on == true){
     if (remote_keep_on_ctrl == "false"){
+      pinMode(trigerPin, OUTPUT);
       digitalWrite(trigerPin, HIGH);        
     }
   }
   
   else{    //this will loop 4 times and if there is not commising message it will give command to turn off. 
     if (perserit > 3){
+      pinMode(trigerPin, OUTPUT);
       digitalWrite(trigerPin, HIGH);    
     }
   }

@@ -1,70 +1,53 @@
-extern String disp_txt;
 
-//Anemometer serial comm.
-   
-#define RTS_pin    19    //RS485 Direction control
-#define RS485Transmit    HIGH
-#define RS485Receive     LOW
+
+#include <ModbusRTU.h>
+
+#define SLAVE_ID 1
+#define FIRST_REG 0
+#define REG_COUNT 2
+
+ModbusRTU mb;
+
 float wind = 999;
 
-
-void anemometerSetup()
-{
-    pinMode(RTS_pin, OUTPUT);   //Anemometer direction control pin
-    Serial2.begin(4800, SERIAL_8N1, 25, 14);  //14-->TX, 25-->RX MAX485
-    delay(100);
+bool cb(Modbus::ResultCode event, uint16_t transactionId, void* data) { // Callback to monitor errors
+  if (event != Modbus::EX_SUCCESS) {
+    return false;
   }
-
-
-void anemometerLoop()
-{
-  float sum = 0;  //reset sum value
-  int j = 0; //counting correct values after filter
-  for (int i = 0; i<4; i++ ) // loop times
-  {
-
-  byte fs_request[] = {
-    0x01,  // Devices Address
-    0x03,  // Function Code
-    0x00,  // Start Address
-    0x00,  // Start Address
-    0x00,  // Read Points
-    0x01,  // Read Points  
-    0x84,  // CRC LOW
-    0x0A   // CRC HIGH
-    }; 
-    
-  Serial2.write(fs_request, sizeof(fs_request));
-  Serial2.flush();
-  byte fs_buf[8];
-  Serial2.readBytes(fs_buf, 8);
-  delay(200);
-  if (fs_buf[0] == 1 && fs_buf[1] == 3 && fs_buf[2] == 2)         //filtering correct values
-    {
-     j++;
-     sum += fs_buf[4];
-     wind = sum/j;
-    }
-  Serial.print(" winds =  "); 
-  Serial.print(fs_buf[4]*0.36); //0.36 conversion constact from m/s to km/h
-  Serial.print(" km/h   ");
-
-  //this prints all the RS485 data array.
-  for (byte z = 0; z<8; z++)
-    {
-     Serial.print(fs_buf[z]);
-     Serial.print(" ");
-    }              
-  }
-  Serial.println();
-  Serial.print("Wind: ");
-  Serial.print(wind);   //average values
-  Serial.println(" km/h");
-  if (wind != 999) {
-  disp_txt += "Wind[km/h] = " + String(wind) + "\n";
-  } 
   else {
-    disp_txt = "Anem. disconnected\n";
-    }
+  return true;
+  } 
+}
+
+void anemometerSetup() {
+  Serial2.begin(4800, SERIAL_8N1, 25, 14);  //14-->TX, 25-->RX MAX485
+  mb.begin(&Serial2);
+  mb.master();
+}
+
+void anemometerLoop() {
+  float wind_sum = 0;
+  int read_counts = 0;
+  for(int i= 0; i<50; i++){
+  uint16_t res[REG_COUNT];
+    if (!mb.slave()) {    // Check if no transaction in progress
+    mb.readHreg(SLAVE_ID, FIRST_REG, res, REG_COUNT, cb); // Send Read Hreg from Modbus Server
   
+    if (cb) {
+      read_counts++;
+    }
+
+    while(mb.slave()) { // Check if transaction is active
+      mb.task();
+      delay(10);
+    }
+    Serial.println(res[0]*0.36);
+    wind_sum = wind_sum + (res[0]*0.36);
+    }
+    delay(20);
   }
+  
+  wind = wind_sum/read_counts;
+  Serial.print("Wind: ");
+  Serial.println(wind);
+}
