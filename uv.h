@@ -17,10 +17,10 @@ void uvSetup()
 {
   Wire.begin();
 
-  long delay = millis();
+  long loop_delay = millis();
   bool break_loop = false;
   while(!ltr390.init() && !break_loop){
-    if(millis() > delay + 2000){
+    if(millis() > loop_delay + 2000){
       break_loop = true;
       Serial.println("LTR390 not connected!");
     }

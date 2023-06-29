@@ -41,9 +41,11 @@ DHT dht(DHTPIN, DHTTYPE);
 
 int perserit = 0;
 void setup() {  
+  pinMode(trigerPin, OUTPUT);   //Triger for the timer 
+  digitalWrite(trigerPin, LOW);    
 
   displaySetup();
-  pinMode(trigerPin, INPUT_PULLDOWN);   //Triger for the timer 
+  
   //Console baud rate 
   Serial.begin(115200);
 
@@ -64,7 +66,7 @@ void loop(){
 
   ///// ***** Harvesting sensor values***** ///// 
   //powerParametersLoop();
-  anemometerSetup();
+  //anemometerSetup();
   anemometerLoop();
   sht30Loop();
   ds18b20Loop();
@@ -81,14 +83,12 @@ void loop(){
 
   if (activate_remote_keep_on == true){
     if (remote_keep_on_ctrl == "false"){
-      pinMode(trigerPin, OUTPUT);
       digitalWrite(trigerPin, HIGH);        
     }
   }
   
   else{    //this will loop 4 times and if there is not commising message it will give command to turn off. 
     if (perserit > 3){
-      pinMode(trigerPin, OUTPUT);
       digitalWrite(trigerPin, HIGH);    
     }
   }

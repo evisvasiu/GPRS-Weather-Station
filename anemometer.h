@@ -28,26 +28,32 @@ void anemometerSetup() {
 void anemometerLoop() {
   float wind_sum = 0;
   int read_counts = 0;
-  for(int i= 0; i<50; i++){
-  uint16_t res[REG_COUNT];
+  long loop_delay = millis();
+  while(millis() < loop_delay + 2000){
+    uint16_t res[REG_COUNT];
     if (!mb.slave()) {    // Check if no transaction in progress
-    mb.readHreg(SLAVE_ID, FIRST_REG, res, REG_COUNT, cb); // Send Read Hreg from Modbus Server
-  
-    if (cb) {
-      read_counts++;
+      mb.readHreg(SLAVE_ID, FIRST_REG, res, REG_COUNT, cb); // Send Read Hreg from Modbus Server
+      while(mb.slave()) { // Check if transaction is active
+        mb.task();
+        delay(10);
+      }
+
+      Serial.println(res[0]);
+      Serial.println(res[1]);
+      Serial.println();
+    
+      if(res[1] < 20){
+        read_counts++;
+        wind_sum = wind_sum + (res[0]*0.36);
+      }
+      delay(100);
     }
 
-    while(mb.slave()) { // Check if transaction is active
-      mb.task();
-      delay(10);
+    if (read_counts != 0){
+      wind = wind_sum/read_counts;
     }
-    Serial.println(res[0]*0.36);
-    wind_sum = wind_sum + (res[0]*0.36);
-    }
-    delay(20);
   }
   
-  wind = wind_sum/read_counts;
   Serial.print("Wind: ");
   Serial.println(wind);
 }
