@@ -41,15 +41,14 @@ DHT dht(DHTPIN, DHTTYPE);
 
 int perserit = 0;
 void setup() {  
-    
-
+  
+  pinMode(trigerPin, OUTPUT);   //Triger for the timer 
+  digitalWrite(trigerPin, LOW);
+  Serial.begin(115200);
   displaySetup();
 
-  Serial.begin(115200);
-
   setupModem();
-    pinMode(trigerPin, OUTPUT);   //Triger for the timer 
-  digitalWrite(trigerPin, LOW);
+
   //GPRS and MQTT initialization
   communicationSetup();
 
