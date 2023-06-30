@@ -13,10 +13,10 @@ float sht30_h = 999;
 void sht30Setup(){
 
   Serial.println("Loading SHT30");
-  long delay = millis();
+  long loop_delay = millis();
   bool break_loop = false;
   while (!sht31.begin(0x44) && !break_loop){   // Set to 0x45 for alternate i2c addr
-    if(millis() > delay + 2000){
+    if(millis() > loop_delay + 2000){
       break_loop = true;
       Serial.println("Couldn't find SHT31");
     }

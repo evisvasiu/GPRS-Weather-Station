@@ -45,8 +45,7 @@ void setup() {
   digitalWrite(trigerPin, LOW);    
 
   displaySetup();
-  
-  //Console baud rate 
+
   Serial.begin(115200);
 
   setupModem();
@@ -62,11 +61,7 @@ void setup() {
 
 void loop(){
 
-  mqttReconnect(); //MQTT connection check
-
-  ///// ***** Harvesting sensor values***** ///// 
-  //powerParametersLoop();
-  //anemometerSetup();
+  mqttReconnect();
   anemometerLoop();
   sht30Loop();
   ds18b20Loop();

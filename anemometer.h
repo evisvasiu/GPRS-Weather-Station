@@ -1,5 +1,3 @@
-
-
 #include <ModbusRTU.h>
 
 #define SLAVE_ID 1
@@ -8,7 +6,7 @@
 
 ModbusRTU mb;
 
-float wind = 999;
+float wind = 999.0;
 
 bool cb(Modbus::ResultCode event, uint16_t transactionId, void* data) { // Callback to monitor errors
   if (event != Modbus::EX_SUCCESS) {
