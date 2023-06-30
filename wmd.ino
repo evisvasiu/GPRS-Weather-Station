@@ -61,6 +61,9 @@ void setup() {
 
 void loop(){
 
+  if (!modem.isNetworkConnected()){
+    communicationSetup();
+  }
   mqttReconnect();
   anemometerLoop();
   sht30Loop();
