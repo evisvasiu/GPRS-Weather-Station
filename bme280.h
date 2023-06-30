@@ -19,7 +19,7 @@ void bmeSetup()
   bool break_loop = false;
   while(!bme.begin() && !break_loop){
     if (millis() > delay + 2000){
-      break_loop = true;f
+      break_loop = true;
       Serial.println("Could not find BME280 sensor!");
     } 
   }
