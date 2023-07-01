@@ -40,18 +40,14 @@ DHT dht(DHTPIN, DHTTYPE);
 
 
 int perserit = 0;
-void setup() {  
-  
+void setup(){  
   pinMode(trigerPin, OUTPUT);   //Triger for the timer 
   digitalWrite(trigerPin, LOW);
-  Serial.begin(115200);
   displaySetup();
-
+  Serial.begin(115200); 
   setupModem();
-
   //GPRS and MQTT initialization
   communicationSetup();
-
   sensors.begin();              //DS18B20
   bmeSetup();
   anemometerSetup();
@@ -84,12 +80,10 @@ void loop(){
       digitalWrite(trigerPin, HIGH);        
     }
   }
-  
   else{    //this will loop 4 times and if there is not commising message it will give command to turn off. 
     if (perserit > 3){
       digitalWrite(trigerPin, HIGH);    
     }
   }
-
   perserit++;
 }

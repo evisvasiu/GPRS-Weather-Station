@@ -11,8 +11,7 @@ float bme_h = 999;
 float bme_a = 0;
 bool bme_found = true;
 
-void bmeSetup()
-{
+void bmeSetup(){
   Serial.println("Loading BME280");
   Wire.begin();
   long delay = millis();
@@ -37,8 +36,7 @@ void bmeSetup()
   }
 }
 
-void bme280Loop(Stream* client)
-{
+void bme280Loop(Stream* client){
    if (bme_found == true) {
   
    float temp(NAN), hum(NAN), pres(NAN);
@@ -64,5 +62,5 @@ void bme280Loop(Stream* client)
    bme_a = 44330 * (1 - pow(bme_p/SEALEVELPRESSURE_HPA, 1/5.255)); //short altitude(pressure) formula
 
    delay(1000);
-   }
+  }
 }

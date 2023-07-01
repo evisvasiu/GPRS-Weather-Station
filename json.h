@@ -4,8 +4,7 @@ char msg_out[300];
 
 DynamicJsonDocument doc(1024);
 
-void jsonPayload()
-{
+void jsonPayload(){
   doc["sht30_t"] = sht30_t;
   doc["sht30_h"] = sht30_h;
   doc["DS18b20"] = temperatureC;
@@ -18,4 +17,4 @@ void jsonPayload()
   doc["batt_v"] = batt_v;
 
   serializeJson(doc, msg_out);
-  }
+}

@@ -11,7 +11,6 @@ float sht30_t = 999;
 float sht30_h = 999;
 
 void sht30Setup(){
-
   Serial.println("Loading SHT30");
   long loop_delay = millis();
   bool break_loop = false;
@@ -30,7 +29,6 @@ void sht30Setup(){
   }
 
 void sht30Loop(){
-
   sht30_t = sht31.readTemperature();
   sht30_h = sht31.readHumidity();
 
@@ -38,33 +36,34 @@ void sht30Loop(){
     Serial.print("SHT30 Temp *C = "); Serial.print(sht30_t); Serial.print("\t\t");
     disp_txt += "SHT30 [*C] = " + String(sht30_t) + "\n";
     testdrawstyles(disp_txt, 1);
-  } else { 
-      Serial.println("Failed to read SHT30 temperature");
-      disp_txt += "SHT30 disconnected\n";  
-      sht30_t = 999;
-    }
+  } 
+  else{ 
+    Serial.println("Failed to read SHT30 temperature");
+    disp_txt += "SHT30 disconnected\n";  
+    sht30_t = 999;
+  }
   
-    if (! isnan(sht30_h)) {  // check if 'is not a number'
-      Serial.print("Hum. % = "); Serial.println(sht30_h);
-      disp_txt += "SHT30 [%] = " + String(sht30_h) + "\n";
-    }
+  if (! isnan(sht30_h)){  // check if 'is not a number'
+    Serial.print("Hum. % = "); Serial.println(sht30_h);
+    disp_txt += "SHT30 [%] = " + String(sht30_h) + "\n";
+  }
 
-    else{ 
-      Serial.println("Failed to read humidity");
-      sht30_h = 999;
-    }
+  else{ 
+    Serial.println("Failed to read humidity");
+    sht30_h = 999;
+  }
     // Toggle heater enabled state every 30 seconds
     // An ~3.0 degC temperature increase can be noted when heater is enabled
-    if (loopCnt >= 30) {
-     enableHeater = !enableHeater;
-     sht31.heater(enableHeater);
-     Serial.print("Heater Enabled State: ");
-    if (sht31.isHeaterEnabled())
+  if (loopCnt >= 30) {
+    enableHeater = !enableHeater;
+    sht31.heater(enableHeater);
+    Serial.print("Heater Enabled State: ");
+  if (sht31.isHeaterEnabled())
        Serial.println("ENABLED");
-    else
-      Serial.println("DISABLED");
-      loopCnt = 0;
-     }
-    loopCnt++;
-  delay(100);
+  else
+    Serial.println("DISABLED");
+    loopCnt = 0;
   }
+  loopCnt++;
+  delay(100);
+}

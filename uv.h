@@ -1,7 +1,6 @@
-#include <Wire.h>
+
 #include <LTR390.h>
 
-#define I2C_ADDRESS 0x53
 int uv_index = 999;
 
 /* There are several ways to create your LTR390 object:
@@ -11,12 +10,9 @@ int uv_index = 999;
  * LTR390 ltr390 = LTR390(&wire2, I2C_ADDRESS) -> all together
  * Successfully tested with two I2C busses on an ESP32
  */
-LTR390 ltr390(I2C_ADDRESS);
+LTR390 ltr390 = LTR390();
 
-void uvSetup()
-{
-  Wire.begin();
-
+void uvSetup(){
   long loop_delay = millis();
   bool break_loop = false;
   while(!ltr390.init() && !break_loop){
@@ -50,11 +46,10 @@ void uvSetup()
   }
 
   //ltr390.setThresholds(100, 1000);
-  //ltr390.configInterrupt(true, LTR390_MODE_UVS);
-  }
+  ltr390.configInterrupt(true, LTR390_MODE_UVS);
+}
 
- void uvLoop(){  
-
+void uvLoop(){ 
   if (ltr390.newDataAvailable()) {
     uv_index =  ltr390.getUVI();
   }
