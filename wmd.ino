@@ -7,7 +7,7 @@
  *  LED diplay - I2C
  *  Timer triger - 18
  *  Anemometer -  RX TX 14 25
- *  Battery valtage - 2
+ *  Battery valtage - 34
  */
 
 #define SIM800L_AXP192_VERSION_20200327   //board - version definition
@@ -67,6 +67,8 @@ void loop(){
   testdrawstyles(disp_txt,1); //Display
   bme280Loop(&Serial);
   uvLoop();
+  powerParametersLoop();
+
  
     ///// ***** Publishing to MQTT***** /////
   jsonPayload();

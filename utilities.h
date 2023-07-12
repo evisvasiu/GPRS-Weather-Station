@@ -1,7 +1,7 @@
 
 #include <Wire.h>
 extern String disp_txt;
-#define batt_pin 15                 //Battery analog pin
+#define batt_pin 34                 //Battery analog pin
 
 //AXP192
 float vbus_v;
@@ -206,21 +206,20 @@ void setupModem(){
 
 void powerParametersLoop(){
   //power module
-  vbus_v = axp.getVbusVoltage();
-  delay(10);
+  //vbus_v = axp.getVbusVoltage();
   //vbus_c = axp.getVbusCurrent();
   //delay(10);
 
   //battery voltage
   float sum = 0;
-  int max_reads = 11;
-  for (int i = 1; i<max_reads; i++) {
+  int max_reads = 10;
+  for (int i = 0; i<max_reads; i++) {
     sum += analogRead(batt_pin);
     delay(10);
   }
-  analog_avg = sum/max_reads;
+  analog_avg = map(sum/max_reads, 0, 4095, 0, 3300);
 
-  batt_v = analog_avg * (3.3/4095)*((2000+10000)/2000)+0.71;
+  batt_v = analog_avg;
   Serial.print("Battery V ");
   Serial.println(batt_v);
 
