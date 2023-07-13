@@ -43,16 +43,17 @@ int perserit = 0;
 void setup(){  
   pinMode(trigerPin, OUTPUT);   //Triger for the timer 
   digitalWrite(trigerPin, LOW);
+
+  Serial.begin(115200);
   displaySetup();
-  Serial.begin(115200); 
+
   setupModem();
-  //GPRS and MQTT initialization
-  communicationSetup();
-  sensors.begin();              //DS18B20
+  ds18b20.begin();
   bmeSetup();
   anemometerSetup();
   sht30Setup();
   uvSetup(); 
+  communicationSetup();
 }
 
 void loop(){
@@ -64,11 +65,9 @@ void loop(){
   anemometerLoop();
   sht30Loop();
   ds18b20Loop();
-  testdrawstyles(disp_txt,1); //Display
   bme280Loop(&Serial);
   uvLoop();
   powerParametersLoop();
-
  
     ///// ***** Publishing to MQTT***** /////
   jsonPayload();

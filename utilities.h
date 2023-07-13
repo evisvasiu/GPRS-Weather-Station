@@ -196,7 +196,7 @@ void setupModem(){
   digitalWrite(MODEM_PWRKEY, HIGH);
   delay(100);
   digitalWrite(MODEM_PWRKEY, LOW);
-  delay(1000);
+  delay(1500);
   digitalWrite(MODEM_PWRKEY, HIGH);
 
   // Initialize the indicator as an output
@@ -219,9 +219,8 @@ void powerParametersLoop(){
   }
   analog_avg = map(sum/max_reads, 0, 4095, 0, 3300);
 
-  batt_v = analog_avg;
   Serial.print("Battery V ");
-  Serial.println(batt_v);
+  Serial.println(analog_avg);
 
     //Serial.printf("VBUS:%.2f mV %.2f mA", vbus_v, vbus_c);
 //        if (axp.isChargeing()) {
@@ -241,5 +240,4 @@ void powerParametersLoop(){
 //            batt_charging_c = 0;
 //        }
 
-  disp_txt += "Board [mA] = " + String(vbus_c) + "\n";
 }
