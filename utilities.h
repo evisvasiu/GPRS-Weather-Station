@@ -32,8 +32,9 @@ void powerSetup(){
   delay(1100);
   digitalWrite(MODEM_PWRKEY, HIGH);
 }
-int sum = 0;
+
 void batteryV(){
+  int sum = 0;
   for (int i = 0; i<10; i++){
     sum = sum + analogRead(batt_pin);
   }

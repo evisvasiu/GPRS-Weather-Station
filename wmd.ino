@@ -54,6 +54,7 @@ void loop(){
   sht30Loop();
   ds18b20Loop();
   bme280Loop(&Serial);
+  batteryV();
   
   anemometerLoop();
  
