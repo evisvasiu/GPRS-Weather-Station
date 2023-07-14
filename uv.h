@@ -50,13 +50,22 @@ void uvSetup(){
 }
 
 void uvLoop(){ 
-  if (ltr390.newDataAvailable()) {
-    uv_index =  ltr390.getUVI();
-  }
-  else {
-   uv_index =  999;
+
+  long delay_loop = millis();
+  bool break_loop = false;
+  while(!ltr390.newDataAvailable() && !break_loop){
+    if (millis() > delay_loop + 5000){
+      break_loop = true;
+      Serial.println("Failed to read UV Index");
+      uv_index =  999;
+    }
+    delay(10);
   }
 
-  Serial.print("UV data: ");
-  Serial.println(String(uv_index));
+  if (!break_loop) {
+    uv_index =  ltr390.getUVI();   
+    Serial.print("UV data: ");
+    Serial.println(String(uv_index));
+  }
+
 }

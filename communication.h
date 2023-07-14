@@ -63,8 +63,7 @@ bool mqttConnect(){
   }
 
   Serial.println(" success");
-  disp_txt += "successfully connected\n";
-  testdrawstyles(disp_txt,1);
+  //testdrawstyles(disp_txt,1);
   lastReconnectAttempt = 0;
   mqtt.publish(topicInit, "Started");
   mqtt.subscribe("lilygo/keep_on",1);
@@ -89,8 +88,6 @@ void mqttReconnect(){
 
 void communicationSetup(){
   Serial.println("Wait...");
-  disp_txt += "Wait... \n";
-  testdrawstyles(disp_txt,1);
 
   // Set GSM module baud rate and UART pins
   Serial1.begin(57600, SERIAL_8N1, MODEM_RX, MODEM_TX);
@@ -99,16 +96,12 @@ void communicationSetup(){
   // Restart takes quite some time
   // To skip it, call init() instead of restart()
   Serial.println("Initializing modem...");
-  disp_txt += "Initializing modem...\n";
-  testdrawstyles(disp_txt,1);
     
   //modem.restart();
   modem.init();
   String modemInfo = modem.getModemInfo();
   Serial.print("Modem Info: ");
   Serial.println(modemInfo);
-  disp_txt += "Modem Info: " + modemInfo + "\n";
-  testdrawstyles(disp_txt, 1);
     
 
   #if TINY_GSM_USE_GPRS
@@ -119,8 +112,6 @@ void communicationSetup(){
   #endif
 
   Serial.print("Waiting for network...");
-  disp_txt = "Waiting for network..\n";
-  testdrawstyles(disp_txt,1);
   long start_time = millis();
   while (!modem.waitForNetwork()) {
     Serial.print(".");
@@ -135,8 +126,6 @@ void communicationSetup(){
 
   if (modem.isNetworkConnected()){
     Serial.println("Network connected\n");
-    disp_txt += "Network connected";
-    testdrawstyles(disp_txt,1);
   }
 
   // GPRS connection parameters are usually set after network registration
@@ -154,8 +143,6 @@ void communicationSetup(){
 
   if (modem.isGprsConnected()) {
     Serial.println("GPRS connected\n");
-    disp_txt += "GPRS connected";
-    testdrawstyles(disp_txt,1);
   }
 
   // MQTT Broker setup
@@ -164,8 +151,6 @@ void communicationSetup(){
 
   Serial.print("Connecting to ");
   Serial.print(broker);
-  disp_txt = "Connecting to \n" + String(broker) + "...\n";
-  testdrawstyles(disp_txt, 1);
 
   mqttConnect();
 

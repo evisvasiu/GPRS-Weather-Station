@@ -29,30 +29,18 @@ bool activate_remote_keep_on = false;
 
 String disp_txt = "";             //Text buffer to display
 
-
-/*
-#include "DHT.h"
-#define DHTPIN 15  
-#define DHTTYPE DHT22
-DHT dht(DHTPIN, DHTTYPE);
-*/
-
-
-
 int perserit = 0;
 void setup(){  
   pinMode(trigerPin, OUTPUT);   //Triger for the timer 
   digitalWrite(trigerPin, LOW);
-
   Serial.begin(115200);
-  displaySetup();
-
-  setupModem();
+  powerSetup();
   ds18b20.begin();
   bmeSetup();
   anemometerSetup();
+  
+  uvSetup();
   sht30Setup();
-  uvSetup(); 
   communicationSetup();
 }
 
@@ -62,19 +50,18 @@ void loop(){
     communicationSetup();
   }
   mqttReconnect();
-  anemometerLoop();
+  uvLoop();
   sht30Loop();
   ds18b20Loop();
   bme280Loop(&Serial);
-  uvLoop();
-  powerParametersLoop();
+  
+  anemometerLoop();
  
     ///// ***** Publishing to MQTT***** /////
   jsonPayload();
   mqtt.publish("lilygo/json", msg_out);
   delay(500);
   mqtt.loop();   //This will check the callback function to see if there is a message
-  testdrawstyles(disp_txt,1);      //Display
 
   if (activate_remote_keep_on == true){
     if (remote_keep_on_ctrl == "false"){

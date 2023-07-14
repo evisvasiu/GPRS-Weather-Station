@@ -14,7 +14,7 @@ void jsonPayload(){
   doc["bme_h"] = bme_h;
   doc["bme_p"] = bme_p;
   doc["bme_a"] = bme_a;
-  doc["batt_v"] = analog_avg;
+  doc["batt_v"] = batt_v;
 
   serializeJson(doc, msg_out);
 }

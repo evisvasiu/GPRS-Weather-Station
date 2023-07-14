@@ -14,10 +14,10 @@ bool bme_found = true;
 void bmeSetup(){
   Serial.println("Loading BME280");
   Wire.begin();
-  long delay = millis();
+  long delay_loop = millis();
   bool break_loop = false;
   while(!bme.begin() && !break_loop){
-    if (millis() > delay + 2000){
+    if (millis() > delay_loop + 5000){
       break_loop = true;
       Serial.println("Could not find BME280 sensor!");
     } 

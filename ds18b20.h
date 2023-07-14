@@ -13,11 +13,9 @@ void ds18b20Loop(){
       Serial.print(temperatureC);
       Serial.print("ºC");
       Serial.println("\n");
-      disp_txt += "DS18B20 [*C] = " + String(temperatureC) + "\n";
   } 
   else{ 
     Serial.println("Failed to read temperature");
     temperatureC = 999;
-    disp_txt += "DS18B20 disconnected";
   }
 }

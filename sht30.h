@@ -1,69 +1,75 @@
-#include <Arduino.h>
-#include "Adafruit_SHT31.h"
+//
+//    FILE: SHT31_async.ino
+//  AUTHOR: Rob Tillaart
+// PURPOSE: demo async interface
+//     URL: https://github.com/RobTillaart/SHT31
 
-extern String disp_txt;
+
+#include "Wire.h"
+#include "SHT31.h"
+
+#define SHT31_ADDRESS   0x44
+
+uint32_t start;
+uint32_t stop;
+uint32_t cnt;
+
+SHT31 sht;
+float sht30_t;
+float sht30_h;
 
 
-bool enableHeater = false;
-uint8_t loopCnt = 0;
-Adafruit_SHT31 sht31 = Adafruit_SHT31();
-float sht30_t = 999;
-float sht30_h = 999;
+void sht30Setup()
+{
+  Serial.begin(115200);
+  Serial.println(__FILE__);
+  Serial.print("SHT31_LIB_VERSION: \t");
+  Serial.println(SHT31_LIB_VERSION);
 
-void sht30Setup(){
-  Serial.println("Loading SHT30");
-  long loop_delay = millis();
-  bool break_loop = false;
-  while (!sht31.begin(0x44) && !break_loop){   // Set to 0x45 for alternate i2c addr
-    if(millis() > loop_delay + 2000){
-      break_loop = true;
-      Serial.println("Couldn't find SHT31");
+  Wire.begin();
+  sht.begin(SHT31_ADDRESS);
+  Wire.setClock(100000);
+
+  uint16_t stat = sht.readStatus();
+  Serial.print(stat, HEX);
+  Serial.println();
+  
+  sht.requestData();
+  cnt = 0;
+}
+
+
+void sht30Loop()
+{
+  if (sht.dataReady())
+  {
+    start = micros();
+    bool success  = sht.readData();   // default = true = fast
+    stop = micros();
+    sht.requestData();                // request for next sample
+
+    Serial.print("\t");
+    Serial.print(stop - start);
+    Serial.print("\t");
+    if (success == false)
+    {
+      Serial.println("Failed read");
+    }
+    else
+    {
+      sht30_t = sht.getTemperature();
+      Serial.print(sht30_t, 1);
+      Serial.print("\t");
+      sht30_h = sht.getHumidity();
+      Serial.print(sht30_h, 1);
+      Serial.print("\t");
+      Serial.println(cnt);
+      cnt = 0;
     }
   }
-
-  Serial.print("Heater Enabled State: ");
-  if (sht31.isHeaterEnabled())
-    Serial.println("ENABLED");
-  else
-    Serial.println("DISABLED");
-  }
-
-void sht30Loop(){
-  sht30_t = sht31.readTemperature();
-  sht30_h = sht31.readHumidity();
-
-  if (! isnan(sht30_t)) {  // check if 'is not a number'
-    Serial.print("SHT30 Temp *C = "); Serial.print(sht30_t); Serial.print("\t\t");
-    disp_txt += "SHT30 [*C] = " + String(sht30_t) + "\n";
-    testdrawstyles(disp_txt, 1);
-  } 
-  else{ 
-    Serial.println("Failed to read SHT30 temperature");
-    disp_txt += "SHT30 disconnected\n";  
-    sht30_t = 999;
-  }
-  
-  if (! isnan(sht30_h)){  // check if 'is not a number'
-    Serial.print("Hum. % = "); Serial.println(sht30_h);
-    disp_txt += "SHT30 [%] = " + String(sht30_h) + "\n";
-  }
-
-  else{ 
-    Serial.println("Failed to read humidity");
-    sht30_h = 999;
-  }
-    // Toggle heater enabled state every 30 seconds
-    // An ~3.0 degC temperature increase can be noted when heater is enabled
-  if (loopCnt >= 30) {
-    enableHeater = !enableHeater;
-    sht31.heater(enableHeater);
-    Serial.print("Heater Enabled State: ");
-  if (sht31.isHeaterEnabled())
-       Serial.println("ENABLED");
-  else
-    Serial.println("DISABLED");
-    loopCnt = 0;
-  }
-  loopCnt++;
-  delay(100);
+  cnt++; // simulate other activity
 }
+
+
+// -- END OF FILE --
+
