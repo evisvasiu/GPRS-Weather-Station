@@ -66,6 +66,7 @@ void uvLoop(){
     uv_index =  ltr390.getUVI();   
     Serial.print("UV data: ");
     Serial.println(String(uv_index));
+    disp_txt = "UV: " + String(uv_index) + "\n";
   }
 
 }

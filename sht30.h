@@ -65,6 +65,7 @@ void sht30Loop()
       Serial.print("\t");
       Serial.println(cnt);
       cnt = 0;
+      disp_txt += "Humidity: " + String(sht30_h) + "%\n";
     }
   }
   cnt++; // simulate other activity

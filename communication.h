@@ -5,7 +5,7 @@
 
 extern String remote_keep_on_ctrl;
 
-extern String disp_txt;
+extern bool enableDisplay;  
 #define trigerPin 18
 
 // Select your modem:
@@ -63,7 +63,8 @@ bool mqttConnect(){
   }
 
   Serial.println(" success");
-  //testdrawstyles(disp_txt,1);
+  disp_txt += "Connected!";
+  testdrawstyles(disp_txt, 1, enableDisplay);
   lastReconnectAttempt = 0;
   mqtt.publish(topicInit, "Started");
   mqtt.subscribe("lilygo/keep_on",1);
@@ -74,11 +75,15 @@ void mqttReconnect(){
 
   if(!mqtt.connected()){
     Serial.print("Recconnecting to MQTT");
+    disp_txt = "Recconnecting to MQTT\n";
+    testdrawstyles(disp_txt, 1, enableDisplay);
     long start_time = millis();
     while(!mqttConnect()){
       if(millis() > start_time + 40000){
         Serial.println("failed");
         Serial.println("Cannot connect to MQTT. Board will turn off in 5 seconds.");
+            disp_txt = "Cannot connect to MQTT. Board will turn off in 5 seconds.";
+            testdrawstyles(disp_txt, 1, enableDisplay);
         delay(5000);
         digitalWrite(trigerPin, HIGH);
       }
@@ -88,6 +93,8 @@ void mqttReconnect(){
 
 void communicationSetup(){
   Serial.println("Wait...");
+  disp_txt = "Wait...\n";
+  testdrawstyles(disp_txt, 1, enableDisplay);
 
   // Set GSM module baud rate and UART pins
   Serial1.begin(57600, SERIAL_8N1, MODEM_RX, MODEM_TX);
@@ -96,6 +103,8 @@ void communicationSetup(){
   // Restart takes quite some time
   // To skip it, call init() instead of restart()
   Serial.println("Initializing modem...");
+  disp_txt += "Initializing modem...\n";
+  testdrawstyles(disp_txt, 1, enableDisplay);
     
   //modem.restart();
   modem.init();
@@ -112,6 +121,8 @@ void communicationSetup(){
   #endif
 
   Serial.print("Waiting for network...");
+  disp_txt = "Waiting for network...\n";
+  testdrawstyles(disp_txt, 1, enableDisplay);
   long start_time = millis();
   while (!modem.waitForNetwork()) {
     Serial.print(".");
@@ -126,11 +137,15 @@ void communicationSetup(){
 
   if (modem.isNetworkConnected()){
     Serial.println("Network connected\n");
+    disp_txt = "Network connected\n";
+    testdrawstyles(disp_txt, 1, enableDisplay);
   }
 
   // GPRS connection parameters are usually set after network registration
   Serial.print(F("Connecting to "));
   Serial.print(apn);
+  disp_txt += "Connecting to \n" + String(apn) + "...\n";
+  testdrawstyles(disp_txt, 1, enableDisplay);
   start_time = millis();
   while (!modem.gprsConnect(apn, gprsUser, gprsPass)) {
     Serial.print(".");
@@ -143,6 +158,8 @@ void communicationSetup(){
 
   if (modem.isGprsConnected()) {
     Serial.println("GPRS connected\n");
+    disp_txt = "GPRS connected\n";
+    testdrawstyles(disp_txt, 1, enableDisplay);
   }
 
   // MQTT Broker setup
@@ -151,6 +168,8 @@ void communicationSetup(){
 
   Serial.print("Connecting to ");
   Serial.print(broker);
+  disp_txt += "Connecting to " + String(broker) + "\n";
+  testdrawstyles(disp_txt, 1, enableDisplay);
 
   mqttConnect();
 

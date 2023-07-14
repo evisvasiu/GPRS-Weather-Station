@@ -19,6 +19,7 @@
 
 AXP20X_Class axp;
 int batt_v = 0;
+extern String disp_txt;  
 
 void powerSetup(){
   Wire.begin(I2C_SDA, I2C_SCL);
@@ -39,4 +40,5 @@ void batteryV(){
     sum = sum + analogRead(batt_pin);
   }
   batt_v = map(sum/10, 0, 4095, 0, 3300);
+  disp_txt += "Battery: " + String(batt_v+1930) + "mV\n";
 }

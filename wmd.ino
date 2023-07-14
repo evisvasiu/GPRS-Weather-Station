@@ -25,14 +25,20 @@
 String remote_keep_on_ctrl = "false";
 bool activate_remote_keep_on = false;
 
-#define trigerPin 18              //Timer triger pin
-
-String disp_txt = "";             //Text buffer to display
+#define trigerPin 18             
+#define displayPin 2
+bool enableDisplay;
+String disp_txt;      
 
 int perserit = 0;
 void setup(){  
-  pinMode(trigerPin, OUTPUT);   //Triger for the timer 
+  pinMode(trigerPin, OUTPUT);   
   digitalWrite(trigerPin, LOW);
+
+  pinMode(displayPin, INPUT_PULLUP);
+  enableDisplay = digitalRead(displayPin);
+  displaySetup(enableDisplay);
+
   Serial.begin(115200);
   powerSetup();
   ds18b20.begin();
@@ -55,6 +61,7 @@ void loop(){
   ds18b20Loop();
   bme280Loop(&Serial);
   batteryV();
+  testdrawstyles(disp_txt, 1, enableDisplay);
   
   anemometerLoop();
  

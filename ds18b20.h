@@ -13,6 +13,7 @@ void ds18b20Loop(){
       Serial.print(temperatureC);
       Serial.print("ºC");
       Serial.println("\n");
+      disp_txt += "Temp: " + String(temperatureC) + "\n";
   } 
   else{ 
     Serial.println("Failed to read temperature");
