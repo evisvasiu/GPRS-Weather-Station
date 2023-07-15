@@ -2,8 +2,9 @@
 #include <LTR390.h>
 
 int uv_index;
-int uv_debug[] = {0, 0};
+int uv_debug[] = {0, 0, 0};
 bool uvFound;
+bool uv_atLeastOneMeasurement;
 
 
 /* There are several ways to create your LTR390 object:
@@ -57,17 +58,23 @@ void uvSetup(){
 
 void uvLoop(){
   if (uvFound){
-    if (ltr390.newDataAvailable()){
-      uv_index =  ltr390.getUVI();  
-      Serial.print("UV data: ");
-      Serial.println(String(uv_index));
-      disp_txt += "UV: " + String(uv_index) + "\n";
-      uv_debug[1] = 0;
+    long loop_delay = millis();
+    while(!uv_atLeastOneMeasurement && millis() < loop_delay + 5000){
+      if (ltr390.newDataAvailable()){
+        uv_index =  ltr390.getUVI();  
+        Serial.print("UV data: ");
+        Serial.println(String(uv_index));
+        disp_txt += "UV: " + String(uv_index) + "\n";
+        uv_debug[1] = 0;
+        uv_atLeastOneMeasurement = true;
     }
-    else{
-      Serial.println("Failed to read UV Index");
-      uv_index =  999;
-      uv_debug[1] = 2;
+      else{
+        Serial.println("Failed to read UV Index");
+        uv_index =  999;
+        uv_debug[1] = 2;
+      }
+      uv_debug[2]++;
+      delay(1000);
     }
   }
 }

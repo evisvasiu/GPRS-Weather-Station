@@ -53,8 +53,9 @@ void anemometerLoop() {
 
     if (read_counts != 0){
       wind = wind_sum/read_counts;
-      wind_debug[2] = read_counts;
+      wind_debug[3] = read_counts;
     }
+    wind_debug[2]++; 
   }
   
   Serial.print("Wind: ");

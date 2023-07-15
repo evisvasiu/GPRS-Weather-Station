@@ -6,13 +6,14 @@
 
 uint32_t start;
 uint32_t stop;
-uint32_t cnt;
+
 
 SHT31 sht;
 float sht30_t;
 float sht30_h;
 bool sht30Found;
-int sht30_debug[] = {0, 0};
+int sht30_debug[] = {0, 0, 0};
+bool sht30_atLeastOneMeasurement;
 
 
 void sht30Setup()
@@ -31,44 +32,39 @@ void sht30Setup()
   Serial.println();
   
   sht.requestData();
-  cnt = 0;
 }
 
+void sht30Loop(){
+  long loop_delay = millis();
+  while(!sht30_atLeastOneMeasurement && millis() < loop_delay + 5000){
+    if (sht.dataReady()){
+      start = micros();
+      bool success  = sht.readData();   // default = true = fast
+      stop = micros();
+      sht.requestData();                // request for next sample
 
-void sht30Loop()
-{
-  if (sht.dataReady())
-  {
-    start = micros();
-    bool success  = sht.readData();   // default = true = fast
-    stop = micros();
-    sht.requestData();                // request for next sample
+      Serial.print("\t");
+      Serial.print(stop - start);
+      Serial.print("\t");
+      if (!success){
+        Serial.println("Failed read");
+        sht30_debug[1]= 2;
+      }
+      else{
+        sht30_t = sht.getTemperature();
+        Serial.print(sht30_t, 1);
+        Serial.print("\t");
+        sht30_h = sht.getHumidity();
+        Serial.print(sht30_h, 1);
+        Serial.print("\t");
 
-    Serial.print("\t");
-    Serial.print(stop - start);
-    Serial.print("\t");
-    if (success == false)
-    {
-      Serial.println("Failed read");
-      sht30_debug[1]= 2;
-    }
-    else
-    {
-      sht30_t = sht.getTemperature();
-      Serial.print(sht30_t, 1);
-      Serial.print("\t");
-      sht30_h = sht.getHumidity();
-      Serial.print(sht30_h, 1);
-      Serial.print("\t");
-      Serial.println(cnt);
-      cnt = 0;
-      disp_txt = "Humidity: " + String(sht30_h) + "%\n";
-      sht30_debug[1] = 0;
+        disp_txt = "Humidity: " + String(sht30_h) + "%\n";
+        sht30_debug[1] = 0;
+        sht30_atLeastOneMeasurement = true;
+      }
     }
   }
-  cnt++; // simulate other activity
+  sht30_debug[2]++;
 }
 
-
-// -- END OF FILE --
 
