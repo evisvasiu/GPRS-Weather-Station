@@ -7,6 +7,7 @@
 ModbusRTU mb;
 
 float wind = 999.0;
+int wind_debug[] = {0, 0, 0};
 
 bool cb(Modbus::ResultCode event, uint16_t transactionId, void* data) { // Callback to monitor errors
   if (event != Modbus::EX_SUCCESS) {
@@ -44,11 +45,15 @@ void anemometerLoop() {
         read_counts++;
         wind_sum = wind_sum + (res[0]*0.36);
       }
+      else{
+        wind_debug[1] = 2;
+      }
       delay(100);
     }
 
     if (read_counts != 0){
       wind = wind_sum/read_counts;
+      wind_debug[2] = read_counts;
     }
   }
   

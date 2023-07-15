@@ -22,6 +22,10 @@ In order to be as energy-efficient as possible, I have designed interval measure
 
 MQTT is chosen as the data transmitting protocol. Data are published as JSON message payload. 
 
+Error code:
+1. Sensor not found during Setup();
+2. 
+
 ## Power circuit:
 
 ![Power circuit](schematic.png)

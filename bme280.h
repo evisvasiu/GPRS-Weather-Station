@@ -1,7 +1,7 @@
 #include <BME280I2C.h>
 #include <Wire.h>     
 extern String disp_txt;
-bool bme_atLeastOneMeasurement;
+int bme_debug[] = {0, 0};
 
 
 #define SEALEVELPRESSURE_HPA (1013.25)  //Sea level constant
@@ -21,6 +21,7 @@ void bmeSetup(){
     if (millis() > delay_loop + 5000){
       break_loop = true;
       Serial.println("Could not find BME280 sensor!");
+      bme_debug[0] = 1;
     } 
   }
 
@@ -63,8 +64,9 @@ void bme280Loop(Stream* client){
    bme_p = pres/100;  //conversion to hpa
 
    bme_a = 44330 * (1 - pow(bme_p/SEALEVELPRESSURE_HPA, 1/5.255)); //short altitude(pressure) formula
-   bme_atLeastOneMeasurement = true;
-
-   delay(1000);
+   bme_debug[1] = 0;
+  }
+  else{
+    bme_debug[1] = 2;
   }
 }
