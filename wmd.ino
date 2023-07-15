@@ -34,20 +34,26 @@ int perserit = 0;
 void setup(){  
   pinMode(trigerPin, OUTPUT);   
   digitalWrite(trigerPin, LOW);
+  pinMode(13, OUTPUT);  //onboard LED
+  digitalWrite(13, LOW);
+  
 
-  pinMode(displayPin, INPUT_PULLUP);
+  pinMode(displayPin, INPUT);
   enableDisplay = digitalRead(displayPin);
   displaySetup(enableDisplay);
 
   Serial.begin(115200);
   powerSetup();
+  
   ds18b20.begin();
   bmeSetup();
   anemometerSetup();
   
-  uvSetup();
+  
   sht30Setup();
+  uvSetup();
   communicationSetup();
+  
 }
 
 void loop(){
@@ -56,14 +62,15 @@ void loop(){
     communicationSetup();
   }
   mqttReconnect();
-  uvLoop();
+  
   sht30Loop();
   ds18b20Loop();
   bme280Loop(&Serial);
+  uvLoop();
   batteryV();
-  testdrawstyles(disp_txt, 1, enableDisplay);
-  
   anemometerLoop();
+  
+  testdrawstyles(disp_txt, 1, enableDisplay);
  
     ///// ***** Publishing to MQTT***** /////
   jsonPayload();

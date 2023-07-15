@@ -1,9 +1,3 @@
-//
-//    FILE: SHT31_async.ino
-//  AUTHOR: Rob Tillaart
-// PURPOSE: demo async interface
-//     URL: https://github.com/RobTillaart/SHT31
-
 
 #include "Wire.h"
 #include "SHT31.h"
@@ -17,6 +11,7 @@ uint32_t cnt;
 SHT31 sht;
 float sht30_t;
 float sht30_h;
+bool sht30Found;
 
 
 void sht30Setup()
@@ -65,7 +60,7 @@ void sht30Loop()
       Serial.print("\t");
       Serial.println(cnt);
       cnt = 0;
-      disp_txt += "Humidity: " + String(sht30_h) + "%\n";
+      disp_txt = "Humidity: " + String(sht30_h) + "%\n";
     }
   }
   cnt++; // simulate other activity

@@ -1,7 +1,11 @@
 
 #include <LTR390.h>
 
-int uv_index = 999;
+int uv_index;
+int uv_debug1;
+int uv_debug2;
+bool uvFound;
+bool atLeastOneMeasurement = false;
 
 /* There are several ways to create your LTR390 object:
  * LTR390 ltr390 = LTR390()                    -> uses Wire / I2C Address = 0x53
@@ -18,9 +22,12 @@ void uvSetup(){
   while(!ltr390.init() && !break_loop){
     if(millis() > loop_delay + 2000){
       break_loop = true;
-      Serial.println("LTR390 not connected!");
+      Serial.println("LTR390 not found!");
+      uv_debug1 = 11;
     }
+    delay(100);
   }
+  uvFound = !break_loop;
 
   ltr390.setMode(LTR390_MODE_UVS);
 
@@ -46,27 +53,25 @@ void uvSetup(){
   }
 
   //ltr390.setThresholds(100, 1000);
-  ltr390.configInterrupt(true, LTR390_MODE_UVS);
+  ltr390.configInterrupt(true, LTR390_MODE_UVS,2);
 }
 
-void uvLoop(){ 
-
-  long delay_loop = millis();
-  bool break_loop = false;
-  while(!ltr390.newDataAvailable() && !break_loop){
-    if (millis() > delay_loop + 5000){
-      break_loop = true;
-      Serial.println("Failed to read UV Index");
-      uv_index =  999;
+void uvLoop(){
+  if (uvFound){
+    if (ltr390.newDataAvailable()){
+      uv_index =  ltr390.getUVI();
+      atLeastOneMeasurement = true;   
+      Serial.print("UV data: ");
+      Serial.println(String(uv_index));
+      disp_txt += "UV: " + String(uv_index) + "\n";
+      uv_debug2 = 0;
     }
-    delay(10);
+    else{
+      Serial.println("Failed to read UV Index");
+      if (!atLeastOneMeasurement) {
+        uv_index =  999;
+      }
+      uv_debug2 = 22;
+    }
   }
-
-  if (!break_loop) {
-    uv_index =  ltr390.getUVI();   
-    Serial.print("UV data: ");
-    Serial.println(String(uv_index));
-    disp_txt = "UV: " + String(uv_index) + "\n";
-  }
-
 }

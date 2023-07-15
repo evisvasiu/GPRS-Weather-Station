@@ -172,7 +172,5 @@ void communicationSetup(){
   testdrawstyles(disp_txt, 1, enableDisplay);
 
   mqttConnect();
-
-  pinMode(13, OUTPUT);  //onboard LED
   digitalWrite(13, HIGH);
 }

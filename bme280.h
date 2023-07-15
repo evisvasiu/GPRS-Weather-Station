@@ -9,7 +9,7 @@ float bme_t = 999;
 float bme_p = 0;
 float bme_h = 999;
 float bme_a = 0;
-bool bme_found = true;
+bool bmeFound;
 
 void bmeSetup(){
   Serial.println("Loading BME280");
@@ -22,6 +22,9 @@ void bmeSetup(){
       Serial.println("Could not find BME280 sensor!");
     } 
   }
+
+  bmeFound = !break_loop;
+
   switch(bme.chipModel())
   {
      case BME280::ChipModel_BME280:
@@ -32,12 +35,11 @@ void bmeSetup(){
        break;
      default:
        Serial.println("Found UNKNOWN sensor! Error!");
-       bme_found = false;
   }
 }
 
 void bme280Loop(Stream* client){
-   if (bme_found == true) {
+   if (bmeFound) {
   
    float temp(NAN), hum(NAN), pres(NAN);
 
