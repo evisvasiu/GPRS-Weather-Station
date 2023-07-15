@@ -24,7 +24,7 @@ MQTT is chosen as the data transmitting protocol. Data are published as JSON mes
 
 Error code:
 1. Sensor not found during Setup();
-2. 
+2. Value not readed during Loop();
 
 ## Power circuit:
 
