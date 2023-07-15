@@ -3,7 +3,7 @@
 //Serial1 is used for the modem communication
 //Serial2 is used for the RS485 module
 
-extern String remote_keep_on_ctrl;
+extern int msgReceived;
 
 extern bool enableDisplay;  
 #define trigerPin 18
@@ -46,10 +46,7 @@ void callback(char* topic, byte* message, unsigned int length) {
     Serial.print((char)message[i]);
     messageTemp += (char)message[i];
   }
-    
-  if (topic == "lilygo/keep_on"){
-    remote_keep_on_ctrl = messageTemp;
-  }
+  msgReceived = messageTemp.toInt();
 }
 
 bool mqttConnect(){
@@ -67,7 +64,7 @@ bool mqttConnect(){
   testdrawstyles(disp_txt, 1, enableDisplay);
   lastReconnectAttempt = 0;
   mqtt.publish(topicInit, "Started");
-  mqtt.subscribe("lilygo/keep_on",1);
+  mqtt.subscribe("lilygo/msgReceived",1);
   return mqtt.connected();
 }
 

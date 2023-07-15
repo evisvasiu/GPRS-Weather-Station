@@ -4,6 +4,7 @@
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature ds18b20(&oneWire);
 float temperatureC;
+bool ds18_atLeastOneMeasurement;
 
 void ds18b20Loop(){
   ds18b20.requestTemperatures(); 
@@ -14,6 +15,7 @@ void ds18b20Loop(){
       Serial.print("ºC");
       Serial.println("\n");
       disp_txt += "Temp: " + String(temperatureC) + "\n";
+      ds18_atLeastOneMeasurement = true;
   } 
   else{ 
     Serial.println("Failed to read temperature");

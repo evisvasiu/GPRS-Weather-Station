@@ -22,7 +22,7 @@
 #include "uv.h"
 #include "json.h"
 
-String remote_keep_on_ctrl = "false";
+int msgReceived;
 bool activate_remote_keep_on = false;
 
 #define trigerPin 18             
@@ -62,31 +62,95 @@ void loop(){
     communicationSetup();
   }
   mqttReconnect();
+
+  int sum = 0;
+  int j = 0;
+  for(int i=1; i<5; i++){
+    uvLoop();
+    i++;
+    if(UV_atLeastOneMeasurement){
+      sum = uv_index + sum;
+      j++;
+    }
+    delay(100);
+  }
+  uv_index = sum/j;
+
+  int sum_t = 0;
+  int sum_h = 0;
+  j = 0;
+  for(int i=1; i<5; i++){
+    sht30Loop();
+    i++;
+    if(SHT_atLeastOneMeasurement){
+      sum_t = sht30_t + sum_t;
+      sum_h = sht30_h + sum_h;
+      j++;
+    }
+    delay(100);
+  }
+  sht30_t = sum_t/j;
+  sht30_h = sum_h/j;
+
+//DS18B20
+  sum = 0;
+  j = 0;
+  for(int i=1; i<5; i++){
+    ds18b20Loop();
+    i++;
+    if(ds18_atLeastOneMeasurement){
+      sum = temperatureC + sum;
+      j++;
+    }
+    delay(100);
+  }
+  temperatureC = sum/j;
+
   
-  sht30Loop();
-  ds18b20Loop();
-  bme280Loop(&Serial);
-  uvLoop();
+//BME280
+  sum_t = 0;
+  sum_h = 0;
+  int sum_p = 0;
+  int sum_a = 0;
+  j = 0;
+  for(int i=1; i<5; i++){
+    bme280Loop(&Serial);
+    i++;
+    if(bme_atLeastOneMeasurement){
+      sum_t = bme_t + sum_t;
+      sum_h = bme_h + sum_h;
+      sum_p = bme_p + sum_p;
+      sum_a = bme_a + sum_a;
+      j++;
+    }
+    delay(100);
+  }
+  bme_t = sum_t/j;
+  bme_h = sum_h/j;
+  bme_p = sum_p/j;
+  bme_a = sum_a/j;
+
   batteryV();
   anemometerLoop();
-  
   testdrawstyles(disp_txt, 1, enableDisplay);
  
     ///// ***** Publishing to MQTT***** /////
   jsonPayload();
   mqtt.publish("lilygo/json", msg_out);
-  delay(500);
-  mqtt.loop();   //This will check the callback function to see if there is a message
+  delay(1000);
+     //This will check the callback function to see if there is a message
 
-  if (activate_remote_keep_on == true){
-    if (remote_keep_on_ctrl == "false"){
-      digitalWrite(trigerPin, HIGH);        
+  long delay_loop = millis();
+  bool break_loop = false;
+  while(msgReceived != 1){
+    if(millis() > delay_loop + 1000000){
+      digitalWrite(trigerPin, HIGH);
     }
+    delay(1000);
+    mqtt.loop();
+    mqttReconnect();
   }
-  else{    //this will loop 4 times and if there is not commising message it will give command to turn off. 
-    if (perserit > 3){
-      digitalWrite(trigerPin, HIGH);    
-    }
-  }
-  perserit++;
+
+  digitalWrite(trigerPin, HIGH);          
+
 }

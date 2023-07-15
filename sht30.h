@@ -12,6 +12,7 @@ SHT31 sht;
 float sht30_t;
 float sht30_h;
 bool sht30Found;
+bool SHT_atLeastOneMeasurement;
 
 
 void sht30Setup()
@@ -61,6 +62,7 @@ void sht30Loop()
       Serial.println(cnt);
       cnt = 0;
       disp_txt = "Humidity: " + String(sht30_h) + "%\n";
+      SHT_atLeastOneMeasurement = true;
     }
   }
   cnt++; // simulate other activity
