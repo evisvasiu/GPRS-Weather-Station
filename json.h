@@ -4,6 +4,8 @@ char msg_out[500];
 
 DynamicJsonDocument doc(1024);
 
+
+
 void jsonPayload(){
   doc["SHT30"]["Temperature"] = sht30_t;
   doc["SHT30"]["Humidity"] = sht30_h;

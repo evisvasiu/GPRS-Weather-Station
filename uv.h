@@ -57,6 +57,7 @@ void uvSetup(){
 }
 
 void uvLoop(){
+  uv_atLeastOneMeasurement = false;
   if (uvFound){
     long loop_delay = millis();
     while(!uv_atLeastOneMeasurement && millis() < loop_delay + 5000){

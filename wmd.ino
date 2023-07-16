@@ -22,15 +22,14 @@
 #include "uv.h"
 #include "json.h"
 
-int msgReceived;
-bool activate_remote_keep_on = false;
+bool msgReceived;
+int keepRunning;
 
 #define trigerPin 18             
 #define displayPin 2
 bool enableDisplay;
 String disp_txt;      
 
-int perserit = 0;
 void setup(){  
   pinMode(trigerPin, OUTPUT);   
   digitalWrite(trigerPin, LOW);
@@ -85,11 +84,9 @@ void loop(){
   jsonPayload();
   mqtt.publish("lilygo/json", msg_out);
   delay(1000);
-     //This will check the callback function to see if there is a message
 
   long delay_loop = millis();
-  bool break_loop = false;
-  while(msgReceived != 1){
+  while(!msgReceived){
     if(millis() > delay_loop + 30000){
       digitalWrite(trigerPin, HIGH);
     }
@@ -97,6 +94,8 @@ void loop(){
     mqtt.loop();
     mqttReconnect();
   }
-
-  digitalWrite(trigerPin, HIGH);          
+  if (keepRunning != 1){
+    digitalWrite(trigerPin, HIGH); 
+  }
+  msgReceived = false;         
 }

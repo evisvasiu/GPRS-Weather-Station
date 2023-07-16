@@ -1,9 +1,10 @@
-#include "credentials.h"    
+#include "credentials.h"   
 //Serial is used for serial monitoring
 //Serial1 is used for the modem communication
 //Serial2 is used for the RS485 module
 
-extern int msgReceived;
+extern bool msgReceived;
+extern int keepRunning;
 
 extern bool enableDisplay;  
 #define trigerPin 18
@@ -34,7 +35,6 @@ TinyGsm modem(Serial1);
 TinyGsmClient client(modem);
 PubSubClient mqtt(client);
 
-int lastReconnectAttempt = 0;
 
 void callback(char* topic, byte* message, unsigned int length) {
   Serial.print("Message arrived on topic: ");
@@ -46,7 +46,8 @@ void callback(char* topic, byte* message, unsigned int length) {
     Serial.print((char)message[i]);
     messageTemp += (char)message[i];
   }
-  msgReceived = messageTemp.toInt();
+  keepRunning = messageTemp.toInt();
+  msgReceived = true;
 }
 
 bool mqttConnect(){
@@ -62,7 +63,6 @@ bool mqttConnect(){
   Serial.println(" success");
   disp_txt += "Connected!";
   testdrawstyles(disp_txt, 1, enableDisplay);
-  lastReconnectAttempt = 0;
   mqtt.publish(topicInit, "Started");
   mqtt.subscribe("lilygo/msgReceived",1);
   return mqtt.connected();

@@ -35,6 +35,7 @@ void sht30Setup()
 }
 
 void sht30Loop(){
+  sht30_atLeastOneMeasurement = false;
   long loop_delay = millis();
   while(!sht30_atLeastOneMeasurement && millis() < loop_delay + 5000){
     if (sht.dataReady()){
