@@ -12,12 +12,13 @@ SHT31 sht;
 float sht30_t;
 float sht30_h;
 bool sht30Found;
-int sht30_debug[] = {0, 0, 0};
+int sht30_debug[3];
 bool sht30_atLeastOneMeasurement;
 
 
 void sht30Setup()
 {
+  sht30_debug[0] = 0;
   Serial.begin(115200);
   Serial.println(__FILE__);
   Serial.print("SHT31_LIB_VERSION: \t");
@@ -35,6 +36,8 @@ void sht30Setup()
 }
 
 void sht30Loop(){
+  sht30_debug[1] = 0;
+  sht30_debug[2] = 0;
   sht30_atLeastOneMeasurement = false;
   long loop_delay = millis();
   while(!sht30_atLeastOneMeasurement && millis() < loop_delay + 5000){

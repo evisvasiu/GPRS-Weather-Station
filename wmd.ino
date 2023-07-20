@@ -97,5 +97,5 @@ void loop(){
   if (keepRunning != 1){
     digitalWrite(trigerPin, HIGH); 
   }
-  msgReceived = false;         
+  msgReceived = false;       
 }
