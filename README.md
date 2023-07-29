@@ -3,7 +3,7 @@
 https://evisvasiu.com/ui
 
  
-A remote weather monitoring device using the "Lilygo ESP32-SIM800L" board. GPRS network is selected for communication by using the integrated SIM800L modem. 
+A remote weather monitoring device by using ESP32 integrated with SIM800L GPRS modem.
 
 Sensors used:
 
